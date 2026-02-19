@@ -2,7 +2,7 @@ name: Update Clearance Data
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Runs every 6 hours
+    - cron: '0 */2 * * *' # Runs every 6 hours
   workflow_dispatch:      # Allows you to click a button to run it manually
 
 permissions:
