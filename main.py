@@ -30,7 +30,7 @@ def generate_html(data):
     for name in sorted(store_names):
         dropdown_options += f'<option value="{name}">{name}</option>'
 
-    # 2. Build the HTML Header with CSS and the Search/Filter Controls
+    # 2. Build the HTML Header with CSS, Analytics, and the Search/Filter Controls
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -38,6 +38,17 @@ def generate_html(data):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sønderborg Food Waste Clearance</title>
+        
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-6Y185D49HV"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+
+          gtag('config', 'G-6Y185D49HV');
+        </script>
+        
         <style>
             body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px; color: #333; }}
             h1 {{ text-align: center; margin-bottom: 20px; }}
@@ -139,9 +150,9 @@ def generate_html(data):
                 # Safe Category extraction
                 categories = item['product'].get('categories', {})
                 if 'en' in categories:
-                    cat_text = categories['en'].split('>')
+                    cat_text = categories['en'].split('>')[-1]
                 elif 'da' in categories:
-                    cat_text = categories['da'].split('>')
+                    cat_text = categories['da'].split('>')[-1]
                 else:
                     cat_text = "General"
 
