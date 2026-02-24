@@ -3,7 +3,6 @@ import json
 import os
 
 # --- CONFIGURATION ---
-# Uses the secure environment variable for GitHub Actions
 TOKEN = os.getenv("SALLING_TOKEN") 
 URL = "https://api.sallinggroup.com/v1/food-waste/"
 ZIP_CODE = "6400"
@@ -30,7 +29,7 @@ def generate_html(data):
     for name in sorted(store_names):
         dropdown_options += f'<option value="{name}">{name}</option>'
 
-    # 2. Build the HTML Header with CSS, Analytics, and the Search/Filter Controls
+    # 2. Build the HTML Header with Modern CSS
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -39,93 +38,113 @@ def generate_html(data):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sønderborg Food Waste Clearance</title>
         
+        <!-- Google Fonts: Inter -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-6Y185D49HV"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){{dataLayer.push(arguments);}}
           gtag('js', new Date());
-
           gtag('config', 'G-6Y185D49HV');
         </script>
         
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px; color: #333; }}
-            h1 {{ text-align: center; margin-bottom: 20px; }}
+            body {{ font-family: 'Inter', sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; color: #1a1a1a; }}
             
-            /* Search and Filter Bar */
-            .controls {{ display: flex; gap: 15px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }}
-            .controls input, .controls select {{ padding: 12px; font-size: 1em; border: 1px solid #ccc; border-radius: 8px; width: 100%; max-width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }}
+            /* Sticky Top Header */
+            .header-container {{ background: #fff; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #eaeaea;}}
+            h1 {{ text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #2c3e50; font-weight: 800; letter-spacing: -0.5px;}}
+            
+            /* Search and Filter Controls */
+            .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }}
+            .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #dcdde1; border-radius: 25px; width: 100%; max-width: 220px; outline: none; font-family: 'Inter', sans-serif; background: #fdfdfd; transition: all 0.2s;}}
+            .controls input:focus, .controls select:focus {{ border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); background: #fff;}}
+            
+            /* Main Content Area */
+            .main-content {{ padding: 20px; max-width: 1200px; margin: 0 auto; }}
             
             /* Brand Headers */
-            .brand-section {{ margin-bottom: 50px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
-            .brand-header {{ font-size: 2.2em; font-weight: 800; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid #eee; text-transform: uppercase; }}
-            .netto {{ color: #fece00; text-shadow: 1px 1px 0 #000; }}
+            .brand-section {{ margin-bottom: 40px; }}
+            .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #eaeaea; text-transform: uppercase; letter-spacing: 1px;}}
+            .netto {{ color: #e6b800; }}
             .foetex {{ color: #101c4e; }}
             .bilka {{ color: #005aa3; }}
 
-            /* Grid & Layout */
-            .store-location {{ font-size: 1.3em; color: #333; margin-top: 30px; margin-bottom: 15px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; flex-wrap: wrap; gap: 10px;}}
-            .traffic-badge {{ font-size: 0.7em; font-weight: normal; padding: 4px 10px; border-radius: 20px; background: #eee; color: #555; }}
-            .product-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }}
+            /* Grid Layout */
+            .store-location {{ font-size: 1.1em; color: #2c3e50; margin-top: 30px; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;}}
+            .traffic-badge {{ font-size: 0.75em; font-weight: 600; padding: 6px 12px; border-radius: 20px; background: #e8ecf1; color: #555; }}
+            .product-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }}
             
-            /* Product Card */
-            .product-card {{ background: #fff; border: 1px solid #e1e1e1; border-radius: 10px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }}
-            .product-card:hover {{ transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }}
-            .img-container {{ width: 100%; height: 180px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }}
-            .product-img {{ width: 100%; height: 100%; object-fit: contain; padding: 10px; box-sizing: border-box; }}
+            /* Product Card Redesign */
+            .product-card {{ background: #fff; border: 1px solid #f1f2f6; border-radius: 16px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.03); position: relative;}}
+            .product-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }}
+            
+            /* Image & Floating Discount */
+            .img-container {{ width: 100%; height: 160px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #f8f9fa;}}
+            .product-img {{ width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }}
+            .product-card:hover .product-img {{ transform: scale(1.08); }}
+            .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4); }}
+            
+            /* Product Info */
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
-            .category {{ font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 5px; }}
-            .title {{ font-weight: bold; font-size: 1em; margin-bottom: 10px; line-height: 1.3; min-height: 2.6em; }}
+            .category {{ font-size: 0.7em; text-transform: uppercase; color: #7f8c8d; margin-bottom: 6px; font-weight: 800; letter-spacing: 0.5px;}}
+            .title {{ font-weight: 600; font-size: 0.95em; margin-bottom: 12px; line-height: 1.4; color: #2c3e50; flex-grow: 1; }}
             
-            /* Prices */
-            .prices {{ display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; }}
-            .price-box {{ display: flex; flex-direction: column; }}
-            .new-price {{ color: #d9534f; font-weight: 800; font-size: 1.4em; }}
-            .old-price {{ text-decoration: line-through; color: #999; font-size: 0.9em; }}
-            .discount-badge {{ background: #d9534f; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.85em; font-weight: bold; height: fit-content; }}
+            /* Pricing Details */
+            .price-box {{ display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;}}
+            .new-price {{ color: #27ae60; font-weight: 800; font-size: 1.5em; letter-spacing: -0.5px;}}
+            .old-price {{ text-decoration: line-through; color: #95a5a6; font-size: 0.9em; }}
+            .savings {{ font-size: 0.75em; color: #27ae60; font-weight: 800; background: #e8f8f5; padding: 4px 8px; border-radius: 6px; border: 1px solid #d1f2eb; width: fit-content; margin-bottom: 10px;}}
 
-            /* Footer Info */
-            .meta-info {{ margin-top: auto; font-size: 0.75em; color: #666; background: #fafafa; padding: 10px; border-top: 1px solid #eee; }}
-            .meta-row {{ display: flex; justify-content: space-between; margin-bottom: 3px; }}
-            .expire-alert {{ color: #d9534f; font-weight: bold; }}
+            /* Bottom Meta Bar */
+            .meta-info {{ font-size: 0.75em; color: #555; background: #fafbfc; padding: 12px 15px; border-top: 1px solid #f1f2f6; }}
+            .meta-row {{ display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center;}}
+            .meta-row:last-child {{ margin-bottom: 0; }}
+            .expire-alert {{ color: #c0392b; font-weight: 800; background: #fdedec; padding: 3px 8px; border-radius: 6px;}}
+            .low-stock {{ color: #e67e22; font-weight: 800; display: flex; align-items: center; gap: 4px; background: #fef5e7; padding: 2px 6px; border-radius: 4px;}}
         </style>
     </head>
     <body>
-        <h1>Food Waste Clearance (6400)</h1>
-        
-        <!-- Search and Filter Tools -->
-        <div class="controls">
-            <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Search (e.g., chicken, milk, egg)...">
-            <select id="storeSelect" onchange="filterItems()">
-                {dropdown_options}
-            </select>
+        <div class="header-container">
+            <h1>🛒 Sønderborg Food Rescue</h1>
+            
+            <div class="controls">
+                <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Search (e.g., chicken, milk)...">
+                <select id="storeSelect" onchange="filterItems()">
+                    {dropdown_options}
+                </select>
+                <select id="sortSelect" onchange="sortItems()">
+                    <option value="default">Sort: Default</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                </select>
+            </div>
         </div>
+        
+        <div class="main-content">
     """
 
-    # Organize data: Brand -> Store List
     brands = {}
     for store_entry in data:
         brand = store_entry['store']['brand']
         if brand not in brands: brands[brand] = []
         brands[brand].append(store_entry)
 
-    # 3. Generate HTML for each brand and store
     for brand, stores in brands.items():
         html_content += f'<div class="brand-section" id="brand-{brand}"><div class="brand-header {brand}">{brand}</div>'
         
         for store in stores:
             store_name = store['store']['name']
-            
-            # Extract customer flow array safely
             store_info = store['store']
             flow_data = "[]"
+            
             if 'hours' in store_info and len(store_info['hours']) > 0:
                 today_hours = store_info['hours'] 
                 if 'customerFlow' in today_hours:
                     flow_data = str(today_hours['customerFlow'])
 
-            # Add data-store attribute so Javascript can filter by store name
             html_content += f'<div class="store-container" data-store="{store_name}">'
             html_content += f"""
                 <div class="store-location">
@@ -143,11 +162,12 @@ def generate_html(data):
                 stock = item['offer']['stock']
                 stock_unit = item['offer']['stockUnit']
                 
-                # Format Dates
+                # Calculate absolute savings
+                savings = round(old_price - new_price, 2)
+                
                 start = item['offer']['startTime'].replace('T', ' ')[:16]
                 expire = item['offer']['endTime'].replace('T', ' ')[:16]
 
-                # Safe Category extraction
                 categories = item['product'].get('categories', {})
                 if 'en' in categories:
                     cat_text = categories['en'].split('>')[-1]
@@ -156,56 +176,55 @@ def generate_html(data):
                 else:
                     cat_text = "General"
 
-                # Image Handling
                 img_src = item['product'].get('image') or PLACEHOLDER_IMG
 
-                # HTML Card
+                # Low Stock Logic
+                if float(stock) <= 2:
+                    stock_display = f'<span class="low-stock">🔥 Only {stock} left!</span>'
+                else:
+                    stock_display = f'<strong>{stock} {stock_unit}</strong>'
+
                 html_content += f"""
                 <div class="product-card">
                     <div class="img-container">
+                        <div class="discount-badge">-{percent}%</div>
                         <img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
                     </div>
                     <div class="info">
                         <div class="category">{cat_text}</div>
                         <div class="title">{desc}</div>
-                        <div class="prices">
-                            <div class="price-box">
-                                <span class="new-price">{new_price} kr.</span>
-                                <span class="old-price">{old_price} kr.</span>
-                            </div>
-                            <div class="discount-badge">-{percent}%</div>
+                        <div class="price-box">
+                            <span class="new-price">{new_price} kr.</span>
+                            <span class="old-price">{old_price} kr.</span>
                         </div>
+                        <div class="savings">Save {savings:.2f} kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>{stock} {stock_unit}</strong></div>
+                        <div class="meta-row"><span>📦 Stock:</span> {stock_display}</div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>{start}</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Expires:</span> <span>{expire}</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>{expire}</span></div>
                     </div>
                 </div>
                 """
-            html_content += '</div></div>' # End Grid and Store Container
-        html_content += '</div>' # End Brand Section
-
-    # 4. Inject JavaScript for the filters and live customer traffic
+            html_content += '</div></div>'
+        html_content += '</div>'
+        
     html_content += """
+        </div> <!-- End main-content -->
         <script>
-            // Logic for the Search Bar and Store Dropdown Filter
             function filterItems() {
                 let searchVal = document.getElementById("searchInput").value.toLowerCase();
                 let storeVal = document.getElementById("storeSelect").value;
-                
                 let storeGroups = document.querySelectorAll(".store-container");
                 
                 storeGroups.forEach(group => {
                     let storeName = group.getAttribute("data-store");
                     let isStoreMatch = (storeVal === "all" || storeVal === storeName);
-                    
                     let cards = group.querySelectorAll(".product-card");
                     let visibleCards = 0;
                     
                     cards.forEach(card => {
                         let text = card.innerText.toLowerCase();
-                        // If the text matches the search AND the store matches the dropdown, show it
                         if (isStoreMatch && text.includes(searchVal)) {
                             card.style.display = "flex";
                             visibleCards++;
@@ -213,13 +232,32 @@ def generate_html(data):
                             card.style.display = "none";
                         }
                     });
-                    
-                    // Hide the entire store header if no products match the search
                     group.style.display = (visibleCards > 0) ? "block" : "none";
                 });
             }
 
-            // Logic to calculate how busy the store is right now
+            function sortItems() {
+                let sortVal = document.getElementById("sortSelect").value;
+                let storeGroups = document.querySelectorAll(".store-container");
+
+                storeGroups.forEach(group => {
+                    let grid = group.querySelector(".product-grid");
+                    let cards = Array.from(grid.querySelectorAll(".product-card"));
+
+                    if (sortVal !== "default") {
+                        cards.sort((a, b) => {
+                            let priceA = parseFloat(a.querySelector(".new-price").innerText.replace(" kr.", ""));
+                            let priceB = parseFloat(b.querySelector(".new-price").innerText.replace(" kr.", ""));
+                            
+                            if (sortVal === "price-asc") return priceA - priceB;
+                            if (sortVal === "price-desc") return priceB - priceA;
+                            return 0;
+                        });
+                    }
+                    cards.forEach(card => grid.appendChild(card));
+                });
+            }
+
             function updateTraffic() {
                 let currentHour = new Date().getHours();
                 let badges = document.querySelectorAll(".traffic-badge");
@@ -239,8 +277,6 @@ def generate_html(data):
                     }
                 });
             }
-
-            // Run the traffic calculation as soon as the page loads
             document.addEventListener('DOMContentLoaded', updateTraffic);
         </script>
     </body></html>
@@ -250,7 +286,6 @@ def generate_html(data):
         f.write(html_content)
     print("Success: 'index.html' created.")
 
-# Run the script
 data = get_clearance_data()
 if data:
     generate_html(data)
