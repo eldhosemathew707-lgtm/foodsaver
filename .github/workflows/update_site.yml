@@ -32,4 +32,5 @@ jobs:
           git config --local user.name "GitHub Action"
           git add index.html
           git commit -m "Auto-update food waste data" || echo "No changes to commit"
+          git pull --rebase
           git push
