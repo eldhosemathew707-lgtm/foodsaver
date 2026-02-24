@@ -1,37 +1,35 @@
-name: Update Clearance Data
+name: Update Food Waste Data
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Runs every 6 hours
-  workflow_dispatch:      # Allows you to click a button to run it manually
-
-permissions:
-  contents: write
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-    - name: Install libraries
-      run: pip install requests
+      - name: Install dependencies
+        run: pip install requests
 
-    - name: Run script
-      env:
-        SALLING_TOKEN: ${{ secrets.SALLING_TOKEN }}
-      run: python main.py
+      - name: Run script to generate HTML
+        env:
+          SALLING_TOKEN: ${{ secrets.SALLING_TOKEN }}
+        run: python main.py
 
-    - name: Commit and Push changes run: |
+      - name: Commit and Push changes
+        run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add index.html previous_data.json
-          git commit -m "Auto-update food waste data and history" || echo "No changes to commit"
+          git add index.html
+          git commit -m "Auto-update food waste data" || echo "No changes to commit"
           git push
