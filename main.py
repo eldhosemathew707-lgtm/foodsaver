@@ -121,7 +121,7 @@ def generate_html(data):
                     {dropdown_options}
                 </select>
                 <select id="sortSelect" onchange="sortItems()">
-                    <option value="default">Sort: Default</option>
+                    <option value="default">Discount :High to low</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
                     <option value="discount-desc">Discount: High to Low</option>
@@ -318,3 +318,4 @@ if data:
     generate_html(data)
 else:
     print("Failed to generate HTML: No data was found. Check your API token or internet connection.")
+
