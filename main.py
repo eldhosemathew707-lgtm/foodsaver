@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+from datetime import datetime, timezone, timedelta
 
 # --- CONFIGURATION ---
 TOKEN = os.getenv("SALLING_TOKEN") 
@@ -70,8 +71,8 @@ def generate_html(data):
             .brand-section {{ margin-bottom: 40px; }}
             .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #333; text-transform: uppercase; letter-spacing: 1px; color: #fff;}}
             .netto {{ color: #fece00; }}
-            .foetex {{ color: #4b7bec; }} /* Adjusted for better contrast on dark */
-            .bilka {{ color: #3498db; }}  /* Adjusted for better contrast on dark */
+            .foetex {{ color: #4b7bec; }}
+            .bilka {{ color: #3498db; }}
 
             /* Grid Layout */
             .store-location {{ font-size: 1.1em; color: #e0e0e0; margin-top: 30px; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;}}
@@ -82,18 +83,21 @@ def generate_html(data):
             .product-card {{ background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;}}
             .product-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.5); border-color: #555;}}
             
-            /* Image & Floating Discount */
+            /* Image & Floating Badges */
             .img-container {{ width: 100%; height: 160px; background: #252525; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #333;}}
             .product-img {{ width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }}
             .product-card:hover .product-img {{ transform: scale(1.08); }}
-            .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4); }}
             
+            /* New Arrival Badge (Left) & Discount Badge (Right) */
+            .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4); }}
+            .new-badge {{ position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(52, 152, 219, 0.4); text-transform: uppercase;}}
+
             /* Product Info */
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
             .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800; letter-spacing: 0.5px;}}
             .title {{ font-weight: 600; font-size: 0.95em; margin-bottom: 12px; line-height: 1.4; color: #ffffff; flex-grow: 1; }}
             
-            /* Pricing Details - Bright Green for Dark Mode */
+            /* Pricing Details */
             .price-box {{ display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;}}
             .new-price {{ color: #2ecc71; font-weight: 800; font-size: 1.5em; letter-spacing: -0.5px;}}
             .old-price {{ text-decoration: line-through; color: #888; font-size: 0.9em; }}
@@ -163,12 +167,26 @@ def generate_html(data):
                 stock = item['offer']['stock']
                 stock_unit = item['offer']['stockUnit']
                 
-                # Calculate absolute savings
                 savings = round(old_price - new_price, 2)
                 
-                start = item['offer']['startTime'].replace('T', ' ')[:16]
+                # Setup Time Parsing
+                start_raw = item['offer']['startTime'] # E.g. "2026-02-19T06:26:04.000Z"
+                start = start_raw.replace('T', ' ')[:16]
                 expire = item['offer']['endTime'].replace('T', ' ')[:16]
 
+                # Check if item was added within the last 24 hours
+                is_new = False
+                try:
+                    # Convert the string to a timezone-aware datetime object
+                    start_dt = datetime.strptime(start_raw[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+                    if datetime.now(timezone.utc) - start_dt <= timedelta(hours=24):
+                        is_new = True
+                except Exception:
+                    pass
+
+                new_badge_html = '<div class="new-badge">✨ NEW</div>' if is_new else ''
+
+                # Safe Category Extraction
                 categories = item['product'].get('categories', {})
                 if 'en' in categories:
                     cat_text = categories['en'].split('>')[-1]
@@ -188,6 +206,7 @@ def generate_html(data):
                 html_content += f"""
                 <div class="product-card">
                     <div class="img-container">
+                        {new_badge_html}
                         <div class="discount-badge">-{percent}%</div>
                         <img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
                     </div>
@@ -285,7 +304,7 @@ def generate_html(data):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
-    print("Success: 'index.html' created in Dark Mode.")
+    print("Success: 'index.html' created.")
 
 data = get_clearance_data()
 if data:
