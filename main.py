@@ -121,7 +121,9 @@ def generate_html(data):
                     {dropdown_options}
                 </select>
                 <select id="sortSelect" onchange="sortItems()">
-                    <option value="default">Discount :High to low</option>
+                    <option value="default">Sort: Default</option>
+                    <option value="date-new">Date: Newest First</option>
+                    <option value="date-old">Date: Oldest First</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
                     <option value="discount-desc">Discount: High to Low</option>
@@ -204,8 +206,9 @@ def generate_html(data):
                 else:
                     stock_display = f'<strong>{stock} {stock_unit}</strong>'
 
+                # Notice the added data-start="{start_raw}" attribute here so JavaScript can sort the times!
                 html_content += f"""
-                <div class="product-card">
+                <div class="product-card" data-start="{start_raw}">
                     <div class="img-container">
                         {new_badge_html}
                         <div class="discount-badge">-{percent}%</div>
@@ -275,9 +278,15 @@ def generate_html(data):
                             let discountA = parseFloat(a.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
                             let discountB = parseFloat(b.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
                             
+                            // Parse Dates from the new data-start attribute
+                            let dateA = new Date(a.getAttribute("data-start"));
+                            let dateB = new Date(b.getAttribute("data-start"));
+
                             if (sortVal === "price-asc") return priceA - priceB;
                             if (sortVal === "price-desc") return priceB - priceA;
-                            if (sortVal === "discount-desc") return discountB - discountA; // Sort Percentage High to Low
+                            if (sortVal === "discount-desc") return discountB - discountA; 
+                            if (sortVal === "date-new") return dateB - dateA; // Sort Date New to Old
+                            if (sortVal === "date-old") return dateA - dateB; // Sort Date Old to New
                             return 0;
                         });
                     }
@@ -318,4 +327,3 @@ if data:
     generate_html(data)
 else:
     print("Failed to generate HTML: No data was found. Check your API token or internet connection.")
-
