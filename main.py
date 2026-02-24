@@ -21,7 +21,7 @@ def get_clearance_data():
     return []
 
 def generate_html(data):
-    # --- NEW: Get the current time (Adjusted to CET) ---
+    # Get the current time (Adjusted to CET)
     update_time = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%d-%m-%Y at %H:%M")
 
     store_names = set()
@@ -51,12 +51,22 @@ def generate_html(data):
         </script>
         
         <style>
-            body {{ font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; }}
-            .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333;}}
+            body {{ font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; overflow-x: hidden; }}
+            
+            /* Header */
+            .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; }}
             h1 {{ text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}}
-            .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }}
+            
+            /* Sidebar & Controls Container */
+            .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; }}
             .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
             .controls input:focus, .controls select:focus {{ border-color: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);}}
+            
+            /* Mobile Toggle Buttons (Hidden on Desktop) */
+            #mobile-menu-btn {{ display: none; }}
+            .close-sidebar-btn {{ display: none; }}
+            #sidebar-overlay {{ display: none; }}
+
             .main-content {{ padding: 20px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }}
             .brand-section {{ margin-bottom: 40px; }}
             .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #333; text-transform: uppercase; color: #fff;}}
@@ -92,12 +102,60 @@ def generate_html(data):
             /* Footer */
             .site-footer {{ text-align: center; padding: 25px; color: #888; font-size: 0.9em; border-top: 1px solid #333; background-color: #1a1a1a; margin-top: 20px; }}
             .site-footer span {{ color: #2ecc71; font-weight: 600; }}
+
+            /* --- MOBILE SIDEBAR RULES --- */
+            @media (max-width: 768px) {{
+                h1 {{ margin-bottom: 5px; }}
+                
+                /* Show the toggle button */
+                #mobile-menu-btn {{ 
+                    display: block; width: 100%; background: #2a2a2a; color: #fff; 
+                    border: 1px solid #444; border-radius: 25px; padding: 12px; 
+                    font-size: 1em; font-weight: 600; cursor: pointer; margin-top: 10px;
+                }}
+                
+                /* Transform controls into a slide-out sidebar */
+                .controls {{
+                    position: fixed; top: 0; left: -300px; width: 260px; height: 100%;
+                    background: #1a1a1a; flex-direction: column; justify-content: flex-start;
+                    padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8);
+                    z-index: 1001; overflow-y: auto;
+                }}
+                
+                /* Class added by JS to open the sidebar */
+                .controls.open {{ left: 0; }}
+                
+                /* Input widths inside sidebar */
+                .controls input, .controls select {{ max-width: 100%; width: 100%; box-sizing: border-box; }}
+                
+                /* Close button inside sidebar */
+                .close-sidebar-btn {{
+                    display: block; background: none; border: none; color: #fff;
+                    font-size: 1.5em; font-weight: bold; text-align: right; margin-bottom: 15px; cursor: pointer;
+                }}
+
+                /* Dark overlay for the rest of the screen */
+                #sidebar-overlay {{
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.6); z-index: 1000; opacity: 0; visibility: hidden; transition: 0.3s;
+                }}
+                #sidebar-overlay.open {{ opacity: 1; visibility: visible; }}
+            }}
         </style>
     </head>
     <body>
+        <!-- Mobile Background Overlay -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
         <div class="header-container">
             <h1>🛒 Sønderborg Food Rescue</h1>
-            <div class="controls">
+            
+            <!-- Button only visible on mobile -->
+            <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters & Sort</button>
+            
+            <!-- Sidebar / Controls -->
+            <div class="controls" id="sidebar">
+                <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
                 <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Search (e.g., chicken, milk)...">
                 <select id="storeSelect" onchange="filterItems()">
                     {dropdown_options}
@@ -217,12 +275,19 @@ def generate_html(data):
     html_content += f"""
         </div> <!-- End main-content -->
         
-        <!-- NEW BOTTOM FOOTER WITH TIMESTAMP -->
         <div class="site-footer">
             🟢 Live data last updated: <span>{update_time}</span>
         </div>
         
         <script>
+            // Sidebar Toggle Logic for Mobile
+            function toggleSidebar() {{
+                let sidebar = document.getElementById("sidebar");
+                let overlay = document.getElementById("sidebar-overlay");
+                sidebar.classList.toggle("open");
+                overlay.classList.toggle("open");
+            }}
+
             function filterItems() {{
                 let searchVal = document.getElementById("searchInput").value.toLowerCase();
                 let storeVal = document.getElementById("storeSelect").value;
@@ -274,6 +339,11 @@ def generate_html(data):
                     }}
                     cards.forEach(card => grid.appendChild(card));
                 }});
+                
+                // Automatically close sidebar on mobile after making a sort selection
+                if(window.innerWidth <= 768) {{
+                    toggleSidebar();
+                }}
             }}
 
             function updateTraffic() {{
