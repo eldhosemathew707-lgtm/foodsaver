@@ -54,15 +54,21 @@ def generate_html(data):
             body {{ font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; overflow-x: hidden; }}
             
             /* Header */
-            .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; }}
+            .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; transition: all 0.3s ease;}}
+            .header-top {{ display: block; }} 
             h1 {{ text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}}
             
             /* Sidebar & Controls Container */
-            .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; }}
+            .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; align-items: center;}}
             .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
             .controls input:focus, .controls select:focus {{ border-color: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);}}
             
-            /* Mobile Toggle Buttons (Hidden on Desktop) */
+            /* Favorites Toggle */
+            .fav-filter-container {{ display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 12px 16px; border-radius: 25px; border: 1px solid #444; cursor: pointer; color: #fff; font-size: 0.95em; font-weight: 600; user-select: none; transition: 0.2s; }}
+            .fav-filter-container:hover {{ border-color: #e74c3c; }}
+            .fav-filter-container input {{ width: auto; margin: 0; cursor: pointer; accent-color: #e74c3c; }}
+
+            /* Mobile Toggle Buttons */
             #mobile-menu-btn {{ display: none; }}
             .close-sidebar-btn {{ display: none; }}
             #sidebar-overlay {{ display: none; }}
@@ -85,6 +91,10 @@ def generate_html(data):
             /* Badges */
             .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
             .new-badge {{ position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
+            
+            /* Favorite Button */
+            .fav-btn {{ position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; cursor: pointer; z-index: 10; transition: 0.2s; backdrop-filter: blur(4px); }}
+            .fav-btn:hover {{ transform: scale(1.1); background: rgba(0,0,0,0.8); }}
 
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
             .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800;}}
@@ -103,60 +113,36 @@ def generate_html(data):
             .site-footer {{ text-align: center; padding: 25px; color: #888; font-size: 0.9em; border-top: 1px solid #333; background-color: #1a1a1a; margin-top: 20px; }}
             .site-footer span {{ color: #2ecc71; font-weight: 600; }}
 
-            /* --- MOBILE SIDEBAR RULES --- */
+            /* --- ULTRA-THIN MOBILE HEADER FIX --- */
             @media (max-width: 768px) {{
-                h1 {{ margin-bottom: 5px; }}
+                .header-container {{ padding: 12px 15px; }}
+                .header-top {{ display: flex; align-items: center; justify-content: space-between; }}
+                h1 {{ margin: 0; font-size: 1.25em; text-align: left;}}
+                #mobile-menu-btn {{ display: inline-block; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 6px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; white-space: nowrap;}}
                 
-                /* Show the toggle button */
-                #mobile-menu-btn {{ 
-                    display: block; width: 100%; background: #2a2a2a; color: #fff; 
-                    border: 1px solid #444; border-radius: 25px; padding: 12px; 
-                    font-size: 1em; font-weight: 600; cursor: pointer; margin-top: 10px;
-                }}
-                
-                /* Transform controls into a slide-out sidebar */
-                .controls {{
-                    position: fixed; top: 0; left: -300px; width: 260px; height: 100%;
-                    background: #1a1a1a; flex-direction: column; justify-content: flex-start;
-                    padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8);
-                    z-index: 1001; overflow-y: auto;
-                }}
-                
-                /* Class added by JS to open the sidebar */
+                .controls {{ position: fixed; top: 0; left: -300px; width: 260px; height: 100%; background: #1a1a1a; flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8); z-index: 1001; overflow-y: auto; }}
                 .controls.open {{ left: 0; }}
-                
-                /* Input widths inside sidebar */
                 .controls input, .controls select {{ max-width: 100%; width: 100%; box-sizing: border-box; }}
+                .fav-filter-container {{ max-width: 100%; width: 100%; box-sizing: border-box; justify-content: flex-start; }}
                 
-                /* Close button inside sidebar */
-                .close-sidebar-btn {{
-                    display: block; background: none; border: none; color: #fff;
-                    font-size: 1.5em; font-weight: bold; text-align: right; margin-bottom: 15px; cursor: pointer;
-                }}
-
-                /* Dark overlay for the rest of the screen */
-                #sidebar-overlay {{
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(0,0,0,0.6); z-index: 1000; opacity: 0; visibility: hidden; transition: 0.3s;
-                }}
+                .close-sidebar-btn {{ display: block; background: none; border: none; color: #fff; font-size: 1.5em; font-weight: bold; text-align: right; margin-bottom: 15px; cursor: pointer; }}
+                #sidebar-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; opacity: 0; visibility: hidden; transition: 0.3s; }}
                 #sidebar-overlay.open {{ opacity: 1; visibility: visible; }}
             }}
         </style>
     </head>
     <body>
-        <!-- Mobile Background Overlay -->
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <div class="header-container">
-            <h1>🛒 Sønderborg Food Rescue</h1>
+            <div class="header-top">
+                <h1>🛒 Food Rescue</h1>
+                <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters</button>
+            </div>
             
-            <!-- Button only visible on mobile -->
-            <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters & Sort</button>
-            
-            <!-- Sidebar / Controls -->
             <div class="controls" id="sidebar">
                 <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
-                <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Search (e.g., chicken, milk)...">
+                <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Search (e.g., chicken)...">
                 <select id="storeSelect" onchange="filterItems()">
                     {dropdown_options}
                 </select>
@@ -168,6 +154,12 @@ def generate_html(data):
                     <option value="price-desc">Price: High to Low</option>
                     <option value="discount-desc">Discount: High to Low</option>
                 </select>
+                
+                <!-- NEW FAVORITES FILTER -->
+                <label class="fav-filter-container">
+                    <input type="checkbox" id="favFilter" onchange="filterItems()"> 
+                    <span>⭐ Favorites Only</span>
+                </label>
             </div>
         </div>
         <div class="main-content">
@@ -208,6 +200,7 @@ def generate_html(data):
                 percent = item['offer']['percentDiscount']
                 stock = item['offer']['stock']
                 stock_unit = item['offer']['stockUnit']
+                ean = item['offer'].get('ean', 'unknown') # Grab the unique ID for favorites
                 
                 savings = round(old_price - new_price, 2)
                 
@@ -246,11 +239,13 @@ def generate_html(data):
                 else:
                     stock_display = f'<strong>{stock_display_val}</strong>'
 
+                # Notice the data-ean attribute and the new fav-btn inside the card
                 html_content += f"""
-                <div class="product-card" data-start="{start_raw}">
+                <div class="product-card" data-start="{start_raw}" data-ean="{ean}">
                     <div class="img-container">
                         {new_badge_html}
                         <div class="discount-badge">-{percent}%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '{ean}')">🤍</button>
                         <img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
                     </div>
                     <div class="info">
@@ -280,7 +275,49 @@ def generate_html(data):
         </div>
         
         <script>
-            // Sidebar Toggle Logic for Mobile
+            // --- FAVORITES LOGIC ---
+            function getFavorites() {{
+                return JSON.parse(localStorage.getItem('foodRescueFavs') || '[]');
+            }}
+
+            function toggleFavorite(event, ean) {{
+                // Prevent clicking the heart from doing anything else
+                event.preventDefault(); 
+                
+                let favs = getFavorites();
+                let btn = event.currentTarget;
+                
+                if (favs.includes(ean)) {{
+                    // Remove from favorites
+                    favs = favs.filter(id => id !== ean);
+                    btn.innerText = "🤍";
+                }} else {{
+                    // Add to favorites
+                    favs.push(ean);
+                    btn.innerText = "❤️";
+                }}
+                
+                localStorage.setItem('foodRescueFavs', JSON.stringify(favs));
+                
+                // If the filter is currently active, instantly hide the card we just un-favorited
+                if(document.getElementById("favFilter").checked) {{
+                    filterItems();
+                }}
+            }}
+
+            // Run when page loads to highlight saved hearts
+            document.addEventListener('DOMContentLoaded', () => {{
+                let favs = getFavorites();
+                document.querySelectorAll('.product-card').forEach(card => {{
+                    let ean = card.getAttribute('data-ean');
+                    if(favs.includes(ean)) {{
+                        card.querySelector('.fav-btn').innerText = "❤️";
+                    }}
+                }});
+                updateTraffic();
+            }});
+
+            // --- MENU & FILTERING LOGIC ---
             function toggleSidebar() {{
                 let sidebar = document.getElementById("sidebar");
                 let overlay = document.getElementById("sidebar-overlay");
@@ -291,6 +328,8 @@ def generate_html(data):
             function filterItems() {{
                 let searchVal = document.getElementById("searchInput").value.toLowerCase();
                 let storeVal = document.getElementById("storeSelect").value;
+                let showFavs = document.getElementById("favFilter").checked;
+                let favs = getFavorites();
                 let storeGroups = document.querySelectorAll(".store-container");
                 
                 storeGroups.forEach(group => {{
@@ -301,7 +340,13 @@ def generate_html(data):
                     
                     cards.forEach(card => {{
                         let text = card.innerText.toLowerCase();
-                        if (isStoreMatch && text.includes(searchVal)) {{
+                        let ean = card.getAttribute('data-ean');
+                        
+                        // Check if it matches search, store, AND the favorite filter
+                        let matchesSearch = text.includes(searchVal);
+                        let matchesFav = !showFavs || favs.includes(ean);
+                        
+                        if (isStoreMatch && matchesSearch && matchesFav) {{
                             card.style.display = "flex";
                             visibleCards++;
                         }} else {{
@@ -340,7 +385,6 @@ def generate_html(data):
                     cards.forEach(card => grid.appendChild(card));
                 }});
                 
-                // Automatically close sidebar on mobile after making a sort selection
                 if(window.innerWidth <= 768) {{
                     toggleSidebar();
                 }}
@@ -365,7 +409,6 @@ def generate_html(data):
                     }}
                 }});
             }}
-            document.addEventListener('DOMContentLoaded', updateTraffic);
         </script>
     </body></html>
     """
