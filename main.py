@@ -8,7 +8,6 @@ TOKEN = os.getenv("SALLING_TOKEN")
 URL = "https://api.sallinggroup.com/v1/food-waste/"
 ZIP_CODE = "6400"
 PLACEHOLDER_IMG = "https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto"
-HISTORY_FILE = "previous_data.json" # New file to store history
 
 def get_clearance_data():
     headers = {"Authorization": f"Bearer {TOKEN}"}
@@ -21,34 +20,7 @@ def get_clearance_data():
         print(f"Connection error: {e}")
     return []
 
-# --- NEW: HISTORY FUNCTIONS ---
-def load_previous_data():
-    if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
-
-def save_current_data(data):
-    current_stock = {}
-    for store in data:
-        store_name = store['store']['name']
-        for item in store['clearances']:
-            ean = item['offer'].get('ean', '')
-            stock = item['offer'].get('stock', 0)
-            # Create a unique ID for the item at this specific store
-            key = f"{store_name}_{ean}"
-            current_stock[key] = stock
-            
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(current_stock, f)
-
 def generate_html(data):
-    # Load what the stock was 2 hours ago
-    previous_stock = load_previous_data()
-    
     store_names = set()
     for store_entry in data:
         store_names.add(store_entry['store']['name'])
@@ -100,7 +72,6 @@ def generate_html(data):
             /* Badges */
             .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
             .new-badge {{ position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
-            .trending-badge {{ position: absolute; bottom: 12px; left: 12px; background: #ff9f43; color: white; padding: 5px 8px; border-radius: 8px; font-size: 0.75em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(255,159,67,0.4);}}
 
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
             .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800;}}
@@ -172,7 +143,6 @@ def generate_html(data):
                 percent = item['offer']['percentDiscount']
                 stock = item['offer']['stock']
                 stock_unit = item['offer']['stockUnit']
-                ean = item['offer'].get('ean', '')
                 
                 savings = round(old_price - new_price, 2)
                 
@@ -190,23 +160,6 @@ def generate_html(data):
 
                 new_badge_html = '<div class="new-badge">✨ NEW</div>' if is_new else ''
 
-                # --- NEW: CALCULATE TRENDING / SOLD BADGE ---
-                sold_badge_html = ""
-                key = f"{store_name}_{ean}"
-                prev_stock = previous_stock.get(key)
-                
-                if prev_stock is not None:
-                    sold_amount = prev_stock - stock
-                    if sold_amount > 0:
-                        if stock_unit == 'kg':
-                            sold_str = f"{round(sold_amount, 2)} kg"
-                        else:
-                            sold_str = f"{int(sold_amount)} units"
-                            
-                        if not sold_str.startswith("0.0"):
-                            sold_badge_html = f'<div class="trending-badge">🔥 {sold_str} sold recently!</div>'
-                # --------------------------------------------
-
                 categories = item['product'].get('categories', {})
                 if 'en' in categories:
                     cat_text = categories['en'].split('>')[-1]
@@ -217,7 +170,7 @@ def generate_html(data):
 
                 img_src = item['product'].get('image') or PLACEHOLDER_IMG
 
-                # --- CLEAN UP DECIMAL WEIGHTS FOR STOCK ---
+                # Clean Up Decimal Weights
                 if stock_unit == 'kg':
                     stock_display_val = f"{round(stock, 2)} kg"
                 else:
@@ -227,13 +180,11 @@ def generate_html(data):
                     stock_display = f'<span class="low-stock">🔥 Only {stock_display_val} left!</span>'
                 else:
                     stock_display = f'<strong>{stock_display_val}</strong>'
-                # -------------------------------------------
 
                 html_content += f"""
                 <div class="product-card" data-start="{start_raw}">
                     <div class="img-container">
                         {new_badge_html}
-                        {sold_badge_html}
                         <div class="discount-badge">-{percent}%</div>
                         <img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
                     </div>
@@ -340,10 +291,8 @@ def generate_html(data):
         f.write(html_content)
     print("Success: 'index.html' created.")
 
-# --- RUN SCRIPT ---
 data = get_clearance_data()
 if data:
-    generate_html(data)       # Build the HTML
-    save_current_data(data)   # Save today's stock numbers for next time!
+    generate_html(data)
 else:
     print("Failed to generate HTML: No data was found.")
