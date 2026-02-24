@@ -124,6 +124,7 @@ def generate_html(data):
                     <option value="default">Sort: Default</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
+                    <option value="discount-desc">Discount: High to Low</option>
                 </select>
             </div>
         </div>
@@ -266,11 +267,17 @@ def generate_html(data):
 
                     if (sortVal !== "default") {
                         cards.sort((a, b) => {
+                            // Parse Pricing
                             let priceA = parseFloat(a.querySelector(".new-price").innerText.replace(" kr.", ""));
                             let priceB = parseFloat(b.querySelector(".new-price").innerText.replace(" kr.", ""));
                             
+                            // Parse Percentages (removing the '-' and '%')
+                            let discountA = parseFloat(a.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
+                            let discountB = parseFloat(b.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
+                            
                             if (sortVal === "price-asc") return priceA - priceB;
                             if (sortVal === "price-desc") return priceB - priceA;
+                            if (sortVal === "discount-desc") return discountB - discountA; // Sort Percentage High to Low
                             return 0;
                         });
                     }
