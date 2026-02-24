@@ -21,6 +21,9 @@ def get_clearance_data():
     return []
 
 def generate_html(data):
+    # --- NEW: Get the current time (Adjusted to CET) ---
+    update_time = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%d-%m-%Y at %H:%M")
+
     store_names = set()
     for store_entry in data:
         store_names.add(store_entry['store']['name'])
@@ -38,6 +41,15 @@ def generate_html(data):
         <title>Sønderborg Food Waste Clearance</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
         
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-6Y185D49HV"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', 'G-6Y185D49HV');
+        </script>
+        
         <style>
             body {{ font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; }}
             .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333;}}
@@ -45,7 +57,7 @@ def generate_html(data):
             .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }}
             .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
             .controls input:focus, .controls select:focus {{ border-color: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);}}
-            .main-content {{ padding: 20px; max-width: 1200px; margin: 0 auto; }}
+            .main-content {{ padding: 20px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }}
             .brand-section {{ margin-bottom: 40px; }}
             .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #333; text-transform: uppercase; color: #fff;}}
             .netto {{ color: #fece00; }}
@@ -76,6 +88,10 @@ def generate_html(data):
             .meta-row:last-child {{ margin-bottom: 0; }}
             .expire-alert {{ color: #ff6b6b; font-weight: 800; background: rgba(255, 107, 107, 0.1); padding: 3px 8px; border-radius: 6px;}}
             .low-stock {{ color: #f39c12; font-weight: 800; display: flex; align-items: center; gap: 4px; background: rgba(243, 156, 18, 0.1); padding: 2px 6px; border-radius: 4px;}}
+            
+            /* Footer */
+            .site-footer {{ text-align: center; padding: 25px; color: #888; font-size: 0.9em; border-top: 1px solid #333; background-color: #1a1a1a; margin-top: 20px; }}
+            .site-footer span {{ color: #2ecc71; font-weight: 600; }}
         </style>
     </head>
     <body>
@@ -198,43 +214,49 @@ def generate_html(data):
             html_content += '</div></div>'
         html_content += '</div>'
         
-    html_content += """
-        </div> 
+    html_content += f"""
+        </div> <!-- End main-content -->
+        
+        <!-- NEW BOTTOM FOOTER WITH TIMESTAMP -->
+        <div class="site-footer">
+            🟢 Live data last updated: <span>{update_time}</span>
+        </div>
+        
         <script>
-            function filterItems() {
+            function filterItems() {{
                 let searchVal = document.getElementById("searchInput").value.toLowerCase();
                 let storeVal = document.getElementById("storeSelect").value;
                 let storeGroups = document.querySelectorAll(".store-container");
                 
-                storeGroups.forEach(group => {
+                storeGroups.forEach(group => {{
                     let storeName = group.getAttribute("data-store");
                     let isStoreMatch = (storeVal === "all" || storeVal === storeName);
                     let cards = group.querySelectorAll(".product-card");
                     let visibleCards = 0;
                     
-                    cards.forEach(card => {
+                    cards.forEach(card => {{
                         let text = card.innerText.toLowerCase();
-                        if (isStoreMatch && text.includes(searchVal)) {
+                        if (isStoreMatch && text.includes(searchVal)) {{
                             card.style.display = "flex";
                             visibleCards++;
-                        } else {
+                        }} else {{
                             card.style.display = "none";
-                        }
-                    });
+                        }}
+                    }});
                     group.style.display = (visibleCards > 0) ? "block" : "none";
-                });
-            }
+                }});
+            }}
 
-            function sortItems() {
+            function sortItems() {{
                 let sortVal = document.getElementById("sortSelect").value;
                 let storeGroups = document.querySelectorAll(".store-container");
 
-                storeGroups.forEach(group => {
+                storeGroups.forEach(group => {{
                     let grid = group.querySelector(".product-grid");
                     let cards = Array.from(grid.querySelectorAll(".product-card"));
 
-                    if (sortVal !== "default") {
-                        cards.sort((a, b) => {
+                    if (sortVal !== "default") {{
+                        cards.sort((a, b) => {{
                             let priceA = parseFloat(a.querySelector(".new-price").innerText.replace(" kr.", ""));
                             let priceB = parseFloat(b.querySelector(".new-price").innerText.replace(" kr.", ""));
                             let discountA = parseFloat(a.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
@@ -248,19 +270,19 @@ def generate_html(data):
                             if (sortVal === "date-new") return dateB - dateA; 
                             if (sortVal === "date-old") return dateA - dateB; 
                             return 0;
-                        });
-                    }
+                        }});
+                    }}
                     cards.forEach(card => grid.appendChild(card));
-                });
-            }
+                }});
+            }}
 
-            function updateTraffic() {
+            function updateTraffic() {{
                 let currentHour = new Date().getHours();
                 let badges = document.querySelectorAll(".traffic-badge");
                 
-                badges.forEach(badge => {
+                badges.forEach(badge => {{
                     let flowStr = badge.getAttribute("data-flow");
-                    if (flowStr && flowStr !== "[]") {
+                    if (flowStr && flowStr !== "[]") {{
                         let flowData = JSON.parse(flowStr);
                         let flow = flowData[currentHour];
                         
@@ -268,11 +290,11 @@ def generate_html(data):
                         else if (flow < 0.20) badge.innerHTML = "🟢 Quiet right now";
                         else if (flow < 0.40) badge.innerHTML = "🟡 Steady traffic";
                         else badge.innerHTML = "🔴 Busy right now";
-                    } else {
+                    }} else {{
                         badge.innerHTML = "⚪ No traffic data";
-                    }
-                });
-            }
+                    }}
+                }});
+            }}
             document.addEventListener('DOMContentLoaded', updateTraffic);
         </script>
     </body></html>
