@@ -8,6 +8,7 @@ TOKEN = os.getenv("SALLING_TOKEN")
 URL = "https://api.sallinggroup.com/v1/food-waste/"
 ZIP_CODE = "6400"
 PLACEHOLDER_IMG = "https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto"
+HISTORY_FILE = "previous_data.json" # New file to store history
 
 def get_clearance_data():
     headers = {"Authorization": f"Bearer {TOKEN}"}
@@ -20,8 +21,34 @@ def get_clearance_data():
         print(f"Connection error: {e}")
     return []
 
+# --- NEW: HISTORY FUNCTIONS ---
+def load_previous_data():
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def save_current_data(data):
+    current_stock = {}
+    for store in data:
+        store_name = store['store']['name']
+        for item in store['clearances']:
+            ean = item['offer'].get('ean', '')
+            stock = item['offer'].get('stock', 0)
+            # Create a unique ID for the item at this specific store
+            key = f"{store_name}_{ean}"
+            current_stock[key] = stock
+            
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(current_stock, f)
+
 def generate_html(data):
-    # 1. Create a list of unique stores for the dropdown filter
+    # Load what the stock was 2 hours ago
+    previous_stock = load_previous_data()
+    
     store_names = set()
     for store_entry in data:
         store_names.add(store_entry['store']['name'])
@@ -30,7 +57,6 @@ def generate_html(data):
     for name in sorted(store_names):
         dropdown_options += f'<option value="{name}">{name}</option>'
 
-    # 2. Build the HTML Header with NEW DARK MODE CSS
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -38,8 +64,6 @@ def generate_html(data):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sønderborg Food Waste Clearance</title>
-        
-        <!-- Google Fonts: Inter -->
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
         
         <!-- Google tag (gtag.js) -->
@@ -52,58 +76,39 @@ def generate_html(data):
         </script>
         
         <style>
-            /* --- DARK MODE THEME --- */
             body {{ font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; }}
-            
-            /* Sticky Top Header */
             .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333;}}
             h1 {{ text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}}
-            
-            /* Search and Filter Controls */
             .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }}
-            .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; font-family: 'Inter', sans-serif; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
+            .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
             .controls input:focus, .controls select:focus {{ border-color: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);}}
-            
-            /* Main Content Area */
             .main-content {{ padding: 20px; max-width: 1200px; margin: 0 auto; }}
-            
-            /* Brand Headers */
             .brand-section {{ margin-bottom: 40px; }}
-            .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #333; text-transform: uppercase; letter-spacing: 1px; color: #fff;}}
+            .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #333; text-transform: uppercase; color: #fff;}}
             .netto {{ color: #fece00; }}
             .foetex {{ color: #4b7bec; }}
             .bilka {{ color: #3498db; }}
-
-            /* Grid Layout */
             .store-location {{ font-size: 1.1em; color: #e0e0e0; margin-top: 30px; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;}}
             .traffic-badge {{ font-size: 0.75em; font-weight: 600; padding: 6px 12px; border-radius: 20px; background: #2a2a2a; color: #aaa; border: 1px solid #444;}}
             .product-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }}
-            
-            /* Product Card Redesign - Dark Mode */
-            .product-card {{ background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;}}
+            .product-card {{ background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column; position: relative;}}
             .product-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.5); border-color: #555;}}
-            
-            /* Image & Floating Badges */
             .img-container {{ width: 100%; height: 160px; background: #252525; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #333;}}
             .product-img {{ width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }}
             .product-card:hover .product-img {{ transform: scale(1.08); }}
             
-            /* New Arrival Badge (Left) & Discount Badge (Right) */
-            .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4); }}
-            .new-badge {{ position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(52, 152, 219, 0.4); text-transform: uppercase;}}
+            /* Badges */
+            .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
+            .new-badge {{ position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
+            .trending-badge {{ position: absolute; bottom: 12px; left: 12px; background: #ff9f43; color: white; padding: 5px 8px; border-radius: 8px; font-size: 0.75em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(255,159,67,0.4);}}
 
-            /* Product Info */
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
-            .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800; letter-spacing: 0.5px;}}
+            .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800;}}
             .title {{ font-weight: 600; font-size: 0.95em; margin-bottom: 12px; line-height: 1.4; color: #ffffff; flex-grow: 1; }}
-            
-            /* Pricing Details */
             .price-box {{ display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;}}
             .new-price {{ color: #2ecc71; font-weight: 800; font-size: 1.5em; letter-spacing: -0.5px;}}
             .old-price {{ text-decoration: line-through; color: #888; font-size: 0.9em; }}
             .savings {{ font-size: 0.75em; color: #2ecc71; font-weight: 800; background: rgba(46, 204, 113, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(46, 204, 113, 0.2); width: fit-content; margin-bottom: 10px;}}
-
-            /* Bottom Meta Bar */
             .meta-info {{ font-size: 0.75em; color: #aaa; background: #1a1a1a; padding: 12px 15px; border-top: 1px solid #333; }}
             .meta-row {{ display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center;}}
             .meta-row:last-child {{ margin-bottom: 0; }}
@@ -114,7 +119,6 @@ def generate_html(data):
     <body>
         <div class="header-container">
             <h1>🛒 Sønderborg Food Rescue</h1>
-            
             <div class="controls">
                 <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Search (e.g., chicken, milk)...">
                 <select id="storeSelect" onchange="filterItems()">
@@ -130,7 +134,6 @@ def generate_html(data):
                 </select>
             </div>
         </div>
-        
         <div class="main-content">
     """
 
@@ -149,7 +152,7 @@ def generate_html(data):
             flow_data = "[]"
             
             if 'hours' in store_info and len(store_info['hours']) > 0:
-                today_hours = store_info['hours']
+                today_hours = store_info['hours'] 
                 if 'customerFlow' in today_hours:
                     flow_data = str(today_hours['customerFlow'])
 
@@ -169,18 +172,16 @@ def generate_html(data):
                 percent = item['offer']['percentDiscount']
                 stock = item['offer']['stock']
                 stock_unit = item['offer']['stockUnit']
+                ean = item['offer'].get('ean', '')
                 
                 savings = round(old_price - new_price, 2)
                 
-                # Setup Time Parsing
-                start_raw = item['offer']['startTime'] # E.g. "2026-02-19T06:26:04.000Z"
+                start_raw = item['offer']['startTime'] 
                 start = start_raw.replace('T', ' ')[:16]
                 expire = item['offer']['endTime'].replace('T', ' ')[:16]
 
-                # Check if item was added within the last 24 hours
                 is_new = False
                 try:
-                    # Convert the string to a timezone-aware datetime object
                     start_dt = datetime.strptime(start_raw[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
                     if datetime.now(timezone.utc) - start_dt <= timedelta(hours=24):
                         is_new = True
@@ -189,7 +190,23 @@ def generate_html(data):
 
                 new_badge_html = '<div class="new-badge">✨ NEW</div>' if is_new else ''
 
-                # Safe Category Extraction
+                # --- NEW: CALCULATE TRENDING / SOLD BADGE ---
+                sold_badge_html = ""
+                key = f"{store_name}_{ean}"
+                prev_stock = previous_stock.get(key)
+                
+                if prev_stock is not None:
+                    sold_amount = prev_stock - stock
+                    if sold_amount > 0:
+                        if stock_unit == 'kg':
+                            sold_str = f"{round(sold_amount, 2)} kg"
+                        else:
+                            sold_str = f"{int(sold_amount)} units"
+                            
+                        if not sold_str.startswith("0.0"):
+                            sold_badge_html = f'<div class="trending-badge">🔥 {sold_str} sold recently!</div>'
+                # --------------------------------------------
+
                 categories = item['product'].get('categories', {})
                 if 'en' in categories:
                     cat_text = categories['en'].split('>')[-1]
@@ -200,17 +217,23 @@ def generate_html(data):
 
                 img_src = item['product'].get('image') or PLACEHOLDER_IMG
 
-                # Low Stock Logic
-                if float(stock) <= 2:
-                    stock_display = f'<span class="low-stock">🔥 Only {stock} left!</span>'
+                # --- CLEAN UP DECIMAL WEIGHTS FOR STOCK ---
+                if stock_unit == 'kg':
+                    stock_display_val = f"{round(stock, 2)} kg"
                 else:
-                    stock_display = f'<strong>{stock} {stock_unit}</strong>'
+                    stock_display_val = f"{int(stock)} {stock_unit}"
 
-                # Notice the added data-start="{start_raw}" attribute here so JavaScript can sort the times!
+                if float(stock) <= 2:
+                    stock_display = f'<span class="low-stock">🔥 Only {stock_display_val} left!</span>'
+                else:
+                    stock_display = f'<strong>{stock_display_val}</strong>'
+                # -------------------------------------------
+
                 html_content += f"""
                 <div class="product-card" data-start="{start_raw}">
                     <div class="img-container">
                         {new_badge_html}
+                        {sold_badge_html}
                         <div class="discount-badge">-{percent}%</div>
                         <img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
                     </div>
@@ -234,7 +257,7 @@ def generate_html(data):
         html_content += '</div>'
         
     html_content += """
-        </div> <!-- End main-content -->
+        </div> 
         <script>
             function filterItems() {
                 let searchVal = document.getElementById("searchInput").value.toLowerCase();
@@ -270,23 +293,18 @@ def generate_html(data):
 
                     if (sortVal !== "default") {
                         cards.sort((a, b) => {
-                            // Parse Pricing
                             let priceA = parseFloat(a.querySelector(".new-price").innerText.replace(" kr.", ""));
                             let priceB = parseFloat(b.querySelector(".new-price").innerText.replace(" kr.", ""));
-                            
-                            // Parse Percentages (removing the '-' and '%')
                             let discountA = parseFloat(a.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
                             let discountB = parseFloat(b.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
-                            
-                            // Parse Dates from the new data-start attribute
                             let dateA = new Date(a.getAttribute("data-start"));
                             let dateB = new Date(b.getAttribute("data-start"));
 
                             if (sortVal === "price-asc") return priceA - priceB;
                             if (sortVal === "price-desc") return priceB - priceA;
                             if (sortVal === "discount-desc") return discountB - discountA; 
-                            if (sortVal === "date-new") return dateB - dateA; // Sort Date New to Old
-                            if (sortVal === "date-old") return dateA - dateB; // Sort Date Old to New
+                            if (sortVal === "date-new") return dateB - dateA; 
+                            if (sortVal === "date-old") return dateA - dateB; 
                             return 0;
                         });
                     }
@@ -322,8 +340,10 @@ def generate_html(data):
         f.write(html_content)
     print("Success: 'index.html' created.")
 
+# --- RUN SCRIPT ---
 data = get_clearance_data()
 if data:
-    generate_html(data)
+    generate_html(data)       # Build the HTML
+    save_current_data(data)   # Save today's stock numbers for next time!
 else:
-    print("Failed to generate HTML: No data was found. Check your API token or internet connection.")
+    print("Failed to generate HTML: No data was found.")
