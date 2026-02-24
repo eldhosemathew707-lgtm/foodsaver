@@ -6,7 +6,7 @@ import os
 TOKEN = os.getenv("SALLING_TOKEN") 
 URL = "https://api.sallinggroup.com/v1/food-waste/"
 ZIP_CODE = "6400"
-PLACEHOLDER_IMG = "https://placehold.co/400x300?text=No+Image+Available&font=roboto"
+PLACEHOLDER_IMG = "https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto"
 
 def get_clearance_data():
     headers = {"Authorization": f"Bearer {TOKEN}"}
@@ -29,7 +29,7 @@ def generate_html(data):
     for name in sorted(store_names):
         dropdown_options += f'<option value="{name}">{name}</option>'
 
-    # 2. Build the HTML Header with Modern CSS
+    # 2. Build the HTML Header with NEW DARK MODE CSS
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -51,59 +51,60 @@ def generate_html(data):
         </script>
         
         <style>
-            body {{ font-family: 'Inter', sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; color: #1a1a1a; }}
+            /* --- DARK MODE THEME --- */
+            body {{ font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; }}
             
             /* Sticky Top Header */
-            .header-container {{ background: #fff; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #eaeaea;}}
-            h1 {{ text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #2c3e50; font-weight: 800; letter-spacing: -0.5px;}}
+            .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333;}}
+            h1 {{ text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}}
             
             /* Search and Filter Controls */
             .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }}
-            .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #dcdde1; border-radius: 25px; width: 100%; max-width: 220px; outline: none; font-family: 'Inter', sans-serif; background: #fdfdfd; transition: all 0.2s;}}
-            .controls input:focus, .controls select:focus {{ border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); background: #fff;}}
+            .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; font-family: 'Inter', sans-serif; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
+            .controls input:focus, .controls select:focus {{ border-color: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);}}
             
             /* Main Content Area */
             .main-content {{ padding: 20px; max-width: 1200px; margin: 0 auto; }}
             
             /* Brand Headers */
             .brand-section {{ margin-bottom: 40px; }}
-            .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #eaeaea; text-transform: uppercase; letter-spacing: 1px;}}
-            .netto {{ color: #e6b800; }}
-            .foetex {{ color: #101c4e; }}
-            .bilka {{ color: #005aa3; }}
+            .brand-header {{ font-size: 1.8em; font-weight: 800; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #333; text-transform: uppercase; letter-spacing: 1px; color: #fff;}}
+            .netto {{ color: #fece00; }}
+            .foetex {{ color: #4b7bec; }} /* Adjusted for better contrast on dark */
+            .bilka {{ color: #3498db; }}  /* Adjusted for better contrast on dark */
 
             /* Grid Layout */
-            .store-location {{ font-size: 1.1em; color: #2c3e50; margin-top: 30px; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;}}
-            .traffic-badge {{ font-size: 0.75em; font-weight: 600; padding: 6px 12px; border-radius: 20px; background: #e8ecf1; color: #555; }}
+            .store-location {{ font-size: 1.1em; color: #e0e0e0; margin-top: 30px; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;}}
+            .traffic-badge {{ font-size: 0.75em; font-weight: 600; padding: 6px 12px; border-radius: 20px; background: #2a2a2a; color: #aaa; border: 1px solid #444;}}
             .product-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }}
             
-            /* Product Card Redesign */
-            .product-card {{ background: #fff; border: 1px solid #f1f2f6; border-radius: 16px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.03); position: relative;}}
-            .product-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }}
+            /* Product Card Redesign - Dark Mode */
+            .product-card {{ background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;}}
+            .product-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.5); border-color: #555;}}
             
             /* Image & Floating Discount */
-            .img-container {{ width: 100%; height: 160px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #f8f9fa;}}
+            .img-container {{ width: 100%; height: 160px; background: #252525; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #333;}}
             .product-img {{ width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }}
             .product-card:hover .product-img {{ transform: scale(1.08); }}
             .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4); }}
             
             /* Product Info */
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
-            .category {{ font-size: 0.7em; text-transform: uppercase; color: #7f8c8d; margin-bottom: 6px; font-weight: 800; letter-spacing: 0.5px;}}
-            .title {{ font-weight: 600; font-size: 0.95em; margin-bottom: 12px; line-height: 1.4; color: #2c3e50; flex-grow: 1; }}
+            .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800; letter-spacing: 0.5px;}}
+            .title {{ font-weight: 600; font-size: 0.95em; margin-bottom: 12px; line-height: 1.4; color: #ffffff; flex-grow: 1; }}
             
-            /* Pricing Details */
+            /* Pricing Details - Bright Green for Dark Mode */
             .price-box {{ display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;}}
-            .new-price {{ color: #27ae60; font-weight: 800; font-size: 1.5em; letter-spacing: -0.5px;}}
-            .old-price {{ text-decoration: line-through; color: #95a5a6; font-size: 0.9em; }}
-            .savings {{ font-size: 0.75em; color: #27ae60; font-weight: 800; background: #e8f8f5; padding: 4px 8px; border-radius: 6px; border: 1px solid #d1f2eb; width: fit-content; margin-bottom: 10px;}}
+            .new-price {{ color: #2ecc71; font-weight: 800; font-size: 1.5em; letter-spacing: -0.5px;}}
+            .old-price {{ text-decoration: line-through; color: #888; font-size: 0.9em; }}
+            .savings {{ font-size: 0.75em; color: #2ecc71; font-weight: 800; background: rgba(46, 204, 113, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(46, 204, 113, 0.2); width: fit-content; margin-bottom: 10px;}}
 
             /* Bottom Meta Bar */
-            .meta-info {{ font-size: 0.75em; color: #555; background: #fafbfc; padding: 12px 15px; border-top: 1px solid #f1f2f6; }}
+            .meta-info {{ font-size: 0.75em; color: #aaa; background: #1a1a1a; padding: 12px 15px; border-top: 1px solid #333; }}
             .meta-row {{ display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center;}}
             .meta-row:last-child {{ margin-bottom: 0; }}
-            .expire-alert {{ color: #c0392b; font-weight: 800; background: #fdedec; padding: 3px 8px; border-radius: 6px;}}
-            .low-stock {{ color: #e67e22; font-weight: 800; display: flex; align-items: center; gap: 4px; background: #fef5e7; padding: 2px 6px; border-radius: 4px;}}
+            .expire-alert {{ color: #ff6b6b; font-weight: 800; background: rgba(255, 107, 107, 0.1); padding: 3px 8px; border-radius: 6px;}}
+            .low-stock {{ color: #f39c12; font-weight: 800; display: flex; align-items: center; gap: 4px; background: rgba(243, 156, 18, 0.1); padding: 2px 6px; border-radius: 4px;}}
         </style>
     </head>
     <body>
@@ -141,7 +142,7 @@ def generate_html(data):
             flow_data = "[]"
             
             if 'hours' in store_info and len(store_info['hours']) > 0:
-                today_hours = store_info['hours'] 
+                today_hours = store_info['hours']
                 if 'customerFlow' in today_hours:
                     flow_data = str(today_hours['customerFlow'])
 
@@ -284,7 +285,7 @@ def generate_html(data):
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
-    print("Success: 'index.html' created.")
+    print("Success: 'index.html' created in Dark Mode.")
 
 data = get_clearance_data()
 if data:
