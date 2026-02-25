@@ -51,7 +51,6 @@ def generate_html(data):
 
         <!-- FIREBASE SDK INJECTION -->
         <script type="module">
-            // NEW: Imported GoogleAuthProvider and signInWithPopup
             import {{ initializeApp }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
             import {{ getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
             import {{ getFirestore, doc, setDoc, getDoc }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -70,13 +69,11 @@ def generate_html(data):
             window.auth = getAuth(app);
             window.db = getFirestore(app);
             
-            // Setup Auth Tools
             window.signInWithEmailAndPassword = signInWithEmailAndPassword;
             window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
             window.signOut = signOut;
             window.sendPasswordResetEmail = sendPasswordResetEmail; 
             
-            // NEW: Setup Google Provider
             window.googleProvider = new GoogleAuthProvider();
             window.signInWithPopup = signInWithPopup;
             
@@ -103,12 +100,11 @@ def generate_html(data):
             .fav-filter-container {{ display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 12px 16px; border-radius: 25px; border: 1px solid #444; cursor: pointer; color: #fff; font-size: 0.95em; font-weight: 600; user-select: none; transition: 0.2s; }}
             .fav-filter-container input {{ width: auto; margin: 0; cursor: pointer; accent-color: #e74c3c; }}
 
-            /* CUSTOM LOGIN MODAL STYLES */
+            /* LOGIN MODAL STYLES */
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }}
             .modal-content {{ background: #1e1e1e; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position: relative; }}
             .modal-content h2 {{ margin-top: 0; color: #fff; font-size: 1.5em; margin-bottom: 20px; text-align: center; }}
             
-            /* NEW: GOOGLE BUTTON STYLES */
             .google-btn {{ background: #fff; color: #333; padding: 10px; border: none; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; font-family: 'Inter', sans-serif;}}
             .google-btn:hover {{ background: #f1f1f1; }}
             .google-icon {{ width: 20px; height: 20px; }}
@@ -188,7 +184,6 @@ def generate_html(data):
                 <span class="close-modal" onclick="closeLoginModal()">✕</span>
                 <h2>Login / Register</h2>
                 
-                <!-- NEW: GOOGLE BUTTON -->
                 <button class="google-btn" onclick="handleGoogleLogin()">
                     <svg class="google-icon" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -292,30 +287,35 @@ def generate_html(data):
                 except Exception: pass
                 new_badge_html = '<div class="new-badge">✨ NEW</div>' if is_new else ''
 
-                # Get the category text
-                cat_text = item['product'].get('categories', {}).get('en', 'General').split('>')[-1]
-                
-                # Check if the image exists
+                # --- UPDATED ROBUST EMOJI LOGIC ---
+                cat_full = item['product'].get('categories', {}).get('en', 'General')
+                cat_text = cat_full.split('>')[-1]
                 img_src = item['product'].get('image')
-                
-                # If image is null, create a smart placeholder based on the category!
-                if not img_src:
-                    cat_lower = cat_text.lower()
-                    if 'meat' in cat_lower or 'pork' in cat_lower or 'beef' in cat_lower or 'sausage' in cat_lower:
+
+                if img_src:
+                    # If it has an image, render the normal image tag
+                    image_html = f'<img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src=\'{PLACEHOLDER_IMG}\';">'
+                else:
+                    # If image is null, check category AND description to assign emoji
+                    cat_lower = cat_full.lower()
+                    desc_lower = desc.lower()
+                    
+                    if 'meat' in cat_lower or 'pork' in cat_lower or 'chicken' in cat_lower or 'sausage' in cat_lower or 'svin' in desc_lower or 'kød' in desc_lower or 'lever' in desc_lower or 'kylling' in desc_lower:
                         emoji = "🥩"
-                    elif 'dairy' in cat_lower or 'cheese' in cat_lower or 'milk' in cat_lower:
+                    elif 'dairy' in cat_lower or 'cheese' in cat_lower or 'milk' in cat_lower or 'ost' in desc_lower or 'gouda' in desc_lower:
                         emoji = "🧀"
-                    elif 'bread' in cat_lower or 'cake' in cat_lower or 'bun' in cat_lower:
+                    elif 'bread' in cat_lower or 'bun' in cat_lower or 'brød' in desc_lower or 'boller' in desc_lower:
                         emoji = "🥐"
-                    elif 'beverage' in cat_lower or 'juice' in cat_lower:
+                    elif 'beverage' in cat_lower or 'juice' in cat_lower or 'drink' in cat_lower:
                         emoji = "🧃"
-                    elif 'fruit' in cat_lower or 'vegetable' in cat_lower or 'salad' in cat_lower:
+                    elif 'fruit' in cat_lower or 'vegetable' in cat_lower or 'salad' in cat_lower or 'salat' in desc_lower:
                         emoji = "🥗"
                     else:
-                        emoji = "🛒" # Default icon
+                        emoji = "🛒"
                     
-                    # Generate a clean, dark-themed image with just the giant emoji
-                    img_src = f"https://placehold.co/400x300/252525/555555?text={emoji}"
+                    # Renders a pure HTML Box so it works safely without APIs
+                    image_html = f'<div class="product-img" style="font-size: 5rem; display: flex; align-items: center; justify-content: center; background: #252525; margin: 0; padding: 0;">{emoji}</div>'
+                # --- END EMOJI LOGIC ---
 
                 if stock_unit == 'kg': stock_display_val = f"{round(stock, 2)} kg"
                 else: stock_display_val = f"{int(stock)} {stock_unit}"
@@ -327,7 +327,7 @@ def generate_html(data):
                         {new_badge_html}
                         <div class="discount-badge">-{percent}%</div>
                         <button class="fav-btn" onclick="toggleFavorite(event, '{ean}')">🤍</button>
-                        <img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
+                        {image_html}
                     </div>
                     <div class="info">
                         <div class="category">{cat_text}</div>
@@ -355,7 +355,6 @@ def generate_html(data):
         <script>
             let userFavorites = [];
 
-            // Listen for Firebase
             window.addEventListener('firebase-ready', () => {{
                 window.auth.onAuthStateChanged(async (user) => {{
                     if (user) {{
@@ -381,7 +380,6 @@ def generate_html(data):
                 }});
             }});
 
-            // --- UI MODAL LOGIC ---
             function openLoginModal() {{
                 document.getElementById('loginMessage').style.display = 'none'; 
                 document.getElementById('emailInput').value = '';
@@ -393,7 +391,6 @@ def generate_html(data):
                 document.getElementById('login-modal').style.display = 'none';
             }}
 
-            // --- NEW: GOOGLE LOGIN LOGIC ---
             async function handleGoogleLogin() {{
                 let msgBox = document.getElementById("loginMessage");
                 try {{
@@ -437,170 +434,4 @@ def generate_html(data):
                             if (err.code === 'auth/email-already-in-use') {{
                                 msgBox.style.color = "#e74c3c";
                                 msgBox.innerHTML = "❌ The password is wrong.<br><br>Click the blue <b>'Forgot password?'</b> text above to reset it!";
-                            }} else {{
-                                msgBox.style.color = "#e74c3c";
-                                msgBox.innerText = "Error: " + err.message;
                             }}
-                            msgBox.style.display = "block";
-                        }}
-                    }} else {{
-                        msgBox.style.color = "#e74c3c"; 
-                        msgBox.innerText = "Login Error: " + error.message;
-                        msgBox.style.display = "block";
-                    }}
-                }}
-            }}
-
-            async function handleForgotPassword() {{
-                let email = document.getElementById("emailInput").value.trim();
-                let msgBox = document.getElementById("loginMessage");
-
-                if (!email) {{
-                    msgBox.style.color = "#e74c3c";
-                    msgBox.innerText = "Please enter your email address in the box first.";
-                    msgBox.style.display = "block";
-                    return;
-                }}
-
-                try {{
-                    await window.sendPasswordResetEmail(window.auth, email);
-                    msgBox.style.color = "#2ecc71"; 
-                    msgBox.innerText = "Reset email sent! Please check your inbox.";
-                    msgBox.style.display = "block";
-                }} catch (error) {{
-                    msgBox.style.color = "#e74c3c";
-                    msgBox.innerText = "Error: " + error.message;
-                    msgBox.style.display = "block";
-                }}
-            }}
-
-            async function handleLogout() {{
-                await window.signOut(window.auth);
-                filterItems(); // Reset the screen
-            }}
-
-            async function toggleFavorite(event, ean) {{
-                event.preventDefault(); 
-                
-                if (!window.auth || !window.auth.currentUser) {{
-                    openLoginModal(); 
-                    return;
-                }}
-                
-                let btn = event.currentTarget;
-                if (userFavorites.includes(ean)) {{
-                    userFavorites = userFavorites.filter(id => id !== ean);
-                    btn.innerText = "🤍";
-                }} else {{
-                    userFavorites.push(ean);
-                    btn.innerText = "❤️";
-                }}
-                
-                try {{
-                    const docRef = window.doc(window.db, "users", window.auth.currentUser.uid);
-                    await window.setDoc(docRef, {{ favorites: userFavorites }});
-                }} catch(e) {{
-                    alert("Error saving to cloud: " + e.message);
-                }}
-                
-                if(document.getElementById("favFilter").checked) filterItems();
-            }}
-
-            function refreshFavoriteUI() {{
-                document.querySelectorAll('.product-card').forEach(card => {{
-                    let ean = card.getAttribute('data-ean');
-                    let btn = card.querySelector('.fav-btn');
-                    if(userFavorites.includes(ean)) btn.innerText = "❤️";
-                    else btn.innerText = "🤍";
-                }});
-            }}
-
-            // --- MENU & FILTERING LOGIC ---
-            function toggleSidebar() {{
-                document.getElementById("sidebar").classList.toggle("open");
-                document.getElementById("sidebar-overlay").classList.toggle("open");
-            }}
-
-            function filterItems() {{
-                let searchVal = document.getElementById("searchInput").value.toLowerCase();
-                let storeVal = document.getElementById("storeSelect").value;
-                let showFavs = document.getElementById("favFilter").checked;
-                let storeGroups = document.querySelectorAll(".store-container");
-                
-                storeGroups.forEach(group => {{
-                    let storeName = group.getAttribute("data-store");
-                    let isStoreMatch = (storeVal === "all" || storeVal === storeName);
-                    let cards = group.querySelectorAll(".product-card");
-                    let visibleCards = 0;
-                    
-                    cards.forEach(card => {{
-                        let text = card.innerText.toLowerCase();
-                        let ean = card.getAttribute('data-ean');
-                        let matchesSearch = text.includes(searchVal);
-                        let matchesFav = !showFavs || userFavorites.includes(ean);
-                        
-                        if (isStoreMatch && matchesSearch && matchesFav) {{
-                            card.style.display = "flex";
-                            visibleCards++;
-                        }} else {{
-                            card.style.display = "none";
-                        }}
-                    }});
-                    group.style.display = (visibleCards > 0) ? "block" : "none";
-                }});
-            }}
-
-            function sortItems() {{
-                let sortVal = document.getElementById("sortSelect").value;
-                document.querySelectorAll(".store-container").forEach(group => {{
-                    let grid = group.querySelector(".product-grid");
-                    let cards = Array.from(grid.querySelectorAll(".product-card"));
-
-                    if (sortVal !== "default") {{
-                        cards.sort((a, b) => {{
-                            let priceA = parseFloat(a.querySelector(".new-price").innerText);
-                            let priceB = parseFloat(b.querySelector(".new-price").innerText);
-                            let discA = parseFloat(a.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
-                            let discB = parseFloat(b.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
-                            let dateA = new Date(a.getAttribute("data-start"));
-                            let dateB = new Date(b.getAttribute("data-start"));
-
-                            if (sortVal === "price-asc") return priceA - priceB;
-                            if (sortVal === "discount-desc") return discB - discA; 
-                            if (sortVal === "date-new") return dateB - dateA; 
-                            return 0;
-                        }});
-                    }}
-                    cards.forEach(card => grid.appendChild(card));
-                }});
-                if(window.innerWidth <= 768) toggleSidebar();
-            }}
-
-            document.addEventListener('DOMContentLoaded', () => {{
-                let currentHour = new Date().getHours();
-                document.querySelectorAll(".traffic-badge").forEach(badge => {{
-                    let flowStr = badge.getAttribute("data-flow");
-                    if (flowStr && flowStr !== "[]") {{
-                        let flowData = JSON.parse(flowStr);
-                        let flow = flowData[currentHour];
-                        if (flow === 0) badge.innerHTML = "🌙 Closed";
-                        else if (flow < 0.20) badge.innerHTML = "🟢 Quiet right now";
-                        else if (flow < 0.40) badge.innerHTML = "🟡 Steady traffic";
-                        else badge.innerHTML = "🔴 Busy right now";
-                    }} else badge.innerHTML = "⚪ No traffic data";
-                }});
-            }});
-        </script>
-    </body></html>
-    """
-
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-    print("Success: 'index.html' created.")
-
-data = get_clearance_data()
-if data:
-    generate_html(data)
-else:
-    print("Failed to generate HTML: No data was found.")
-
