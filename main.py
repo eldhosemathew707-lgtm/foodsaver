@@ -51,8 +51,9 @@ def generate_html(data):
 
         <!-- FIREBASE SDK INJECTION -->
         <script type="module">
+            // NEW: Imported GoogleAuthProvider and signInWithPopup
             import {{ initializeApp }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-            import {{ getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+            import {{ getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
             import {{ getFirestore, doc, setDoc, getDoc }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
             // TODO: PASTE YOUR FIREBASE CONFIG HERE:
@@ -68,10 +69,17 @@ def generate_html(data):
             const app = initializeApp(firebaseConfig);
             window.auth = getAuth(app);
             window.db = getFirestore(app);
+            
+            // Setup Auth Tools
             window.signInWithEmailAndPassword = signInWithEmailAndPassword;
             window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
             window.signOut = signOut;
             window.sendPasswordResetEmail = sendPasswordResetEmail; 
+            
+            // NEW: Setup Google Provider
+            window.googleProvider = new GoogleAuthProvider();
+            window.signInWithPopup = signInWithPopup;
+            
             window.doc = doc;
             window.setDoc = setDoc;
             window.getDoc = getDoc;
@@ -99,12 +107,20 @@ def generate_html(data):
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }}
             .modal-content {{ background: #1e1e1e; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position: relative; }}
             .modal-content h2 {{ margin-top: 0; color: #fff; font-size: 1.5em; margin-bottom: 20px; text-align: center; }}
+            
+            /* NEW: GOOGLE BUTTON STYLES */
+            .google-btn {{ background: #fff; color: #333; padding: 10px; border: none; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; font-family: 'Inter', sans-serif;}}
+            .google-btn:hover {{ background: #f1f1f1; }}
+            .google-icon {{ width: 20px; height: 20px; }}
+            .divider {{ text-align: center; margin: 15px 0; color: #888; font-size: 0.9em; position: relative; }}
+            .divider::before, .divider::after {{ content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: #444; }}
+            .divider::before {{ left: 0; }}
+            .divider::after {{ right: 0; }}
+
             .modal-content input {{ width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; box-sizing: border-box; font-family: 'Inter', sans-serif; }}
             .modal-content input:focus {{ border-color: #3498db; outline: none; }}
-            
             .forgot-password {{ text-align: right; margin-top: -10px; margin-bottom: 15px; font-size: 0.85em; color: #3498db; cursor: pointer; transition: 0.2s; }}
             .forgot-password:hover {{ text-decoration: underline; color: #2980b9; }}
-
             .modal-btn {{ background: #2ecc71; color: white; padding: 12px; border: none; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; transition: 0.2s; }}
             .modal-btn:hover {{ background: #27ae60; }}
             .close-modal {{ position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2em; font-weight: bold; transition: 0.2s; }}
@@ -171,12 +187,26 @@ def generate_html(data):
             <div class="modal-content">
                 <span class="close-modal" onclick="closeLoginModal()">✕</span>
                 <h2>Login / Register</h2>
+                
+                <!-- NEW: GOOGLE BUTTON -->
+                <button class="google-btn" onclick="handleGoogleLogin()">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+                
+                <div class="divider">or</div>
+
                 <input type="email" id="emailInput" placeholder="Email address" required>
                 <input type="password" id="passwordInput" placeholder="Password (min. 6 chars)">
                 
                 <div class="forgot-password" onclick="handleForgotPassword()">Forgot password?</div>
                 
-                <button class="modal-btn" onclick="submitLogin()">Continue</button>
+                <button class="modal-btn" onclick="submitLogin()">Continue with Email</button>
                 <p id="loginMessage" style="color: #e74c3c; font-size: 0.85em; margin-top: 15px; display: none;"></p>
             </div>
         </div>
@@ -341,12 +371,24 @@ def generate_html(data):
                 document.getElementById('login-modal').style.display = 'none';
             }}
 
+            // --- NEW: GOOGLE LOGIN LOGIC ---
+            async function handleGoogleLogin() {{
+                let msgBox = document.getElementById("loginMessage");
+                try {{
+                    await window.signInWithPopup(window.auth, window.googleProvider);
+                    closeLoginModal();
+                }} catch (error) {{
+                    msgBox.style.color = "#e74c3c";
+                    msgBox.innerText = "Google Login Error: " + error.message;
+                    msgBox.style.display = "block";
+                }}
+            }}
+
             async function submitLogin() {{
                 let email = document.getElementById("emailInput").value.trim();
                 let password = document.getElementById("passwordInput").value;
                 let msgBox = document.getElementById("loginMessage");
                 
-                // 1. If they left everything blank or just email blank
                 if (!email) {{
                     msgBox.style.color = "#e74c3c";
                     msgBox.innerText = "Please enter your email address first.";
@@ -354,20 +396,17 @@ def generate_html(data):
                     return;
                 }}
 
-                // 2. THE FIX: If they typed an email but don't know the password
                 if (!password) {{
-                    msgBox.style.color = "#f39c12"; // Yellow warning color
+                    msgBox.style.color = "#f39c12"; 
                     msgBox.innerHTML = "Password is required to login.<br><br><b>Forgot it?</b> Click the blue 'Forgot password?' text right above this button!";
                     msgBox.style.display = "block";
                     return;
                 }}
 
                 try {{
-                    // Try to log in
                     await window.signInWithEmailAndPassword(window.auth, email, password);
                     closeLoginModal();
                 }} catch (error) {{
-                    // If it fails, try to create the account just in case it doesn't exist
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {{
                         try {{
                             await window.createUserWithEmailAndPassword(window.auth, email, password);
@@ -375,7 +414,7 @@ def generate_html(data):
                         }} catch(err) {{
                             if (err.code === 'auth/email-already-in-use') {{
                                 msgBox.style.color = "#e74c3c";
-                                msgBox.innerText = "Incorrect password. Please try again or use 'Forgot password?'.";
+                                msgBox.innerHTML = "❌ The password is wrong.<br><br>Click the blue <b>'Forgot password?'</b> text above to reset it!";
                             }} else {{
                                 msgBox.style.color = "#e74c3c";
                                 msgBox.innerText = "Error: " + err.message;
@@ -390,7 +429,6 @@ def generate_html(data):
                 }}
             }}
 
-            // --- FORGOT PASSWORD LOGIC ---
             async function handleForgotPassword() {{
                 let email = document.getElementById("emailInput").value.trim();
                 let msgBox = document.getElementById("loginMessage");
@@ -404,7 +442,7 @@ def generate_html(data):
 
                 try {{
                     await window.sendPasswordResetEmail(window.auth, email);
-                    msgBox.style.color = "#2ecc71"; // Green success text
+                    msgBox.style.color = "#2ecc71"; 
                     msgBox.innerText = "Reset email sent! Please check your inbox.";
                     msgBox.style.display = "block";
                 }} catch (error) {{
