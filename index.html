@@ -32,7 +32,6 @@
                 appId: "1:201559525774:web:420f9fc505ae453a04bcdf"
             };
 
-            // Initialize Firebase
             const app = initializeApp(firebaseConfig);
             window.auth = getAuth(app);
             window.db = getFirestore(app);
@@ -43,31 +42,36 @@
             window.setDoc = setDoc;
             window.getDoc = getDoc;
             
-            // Fire an event when Firebase is fully loaded
             window.dispatchEvent(new Event('firebase-ready'));
         </script>
         
         <style>
             body { font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; overflow-x: hidden; }
             
-            /* Header */
             .header-container { background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; transition: all 0.3s ease;}
             .header-top { display: flex; align-items: center; justify-content: space-between; } 
             h1 { margin: 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}
             
-            /* Buttons */
             #loginBtn { background: #3498db; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
             #loginBtn:hover { background: #2980b9; }
             #mobile-menu-btn { display: none; }
             
-            /* Controls */
             .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; align-items: center; margin-top: 15px; }
             .controls input, .controls select { padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}
-            
             .fav-filter-container { display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 12px 16px; border-radius: 25px; border: 1px solid #444; cursor: pointer; color: #fff; font-size: 0.95em; font-weight: 600; user-select: none; transition: 0.2s; }
             .fav-filter-container input { width: auto; margin: 0; cursor: pointer; accent-color: #e74c3c; }
 
-            /* Mobile Toggle Buttons */
+            /* --- NEW: CUSTOM LOGIN MODAL STYLES --- */
+            .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+            .modal-content { background: #1e1e1e; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position: relative; }
+            .modal-content h2 { margin-top: 0; color: #fff; font-size: 1.5em; margin-bottom: 20px; text-align: center; }
+            .modal-content input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+            .modal-content input:focus { border-color: #3498db; outline: none; }
+            .modal-btn { background: #2ecc71; color: white; padding: 12px; border: none; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; transition: 0.2s; }
+            .modal-btn:hover { background: #27ae60; }
+            .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2em; font-weight: bold; transition: 0.2s; }
+            .close-modal:hover { color: #fff; }
+
             .close-sidebar-btn { display: none; }
             #sidebar-overlay { display: none; }
 
@@ -124,11 +128,23 @@
     <body>
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
+        <!-- NEW: CUSTOM HTML LOGIN MODAL -->
+        <div id="login-modal" class="modal-overlay">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeLoginModal()">✕</span>
+                <h2>Login / Register</h2>
+                <input type="email" id="emailInput" placeholder="Email address" required>
+                <input type="password" id="passwordInput" placeholder="Password (min. 6 chars)" required>
+                <button class="modal-btn" onclick="submitLogin()">Continue</button>
+                <p id="loginMessage" style="color: #e74c3c; font-size: 0.85em; margin-top: 15px; display: none;"></p>
+            </div>
+        </div>
+
         <div class="header-container">
             <div class="header-top">
                 <h1>🛒 Food Rescue</h1>
                 <div>
-                    <button id="loginBtn" onclick="handleLoginFlow()">Login / Register</button>
+                    <button id="loginBtn" onclick="openLoginModal()">Login</button>
                     <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters</button>
                 </div>
             </div>
@@ -4342,19 +4358,18 @@
                 </div>
                 </div></div></div>
         </div> 
-        <div class="site-footer">🟢 Live data last updated: <span>25-02-2026 at 13:24</span></div>
+        <div class="site-footer">🟢 Live data last updated: <span>25-02-2026 at 13:35</span></div>
         
         <script>
             let userFavorites = [];
 
-            // Listen for Firebase to initialize before setting up auth checks
+            // Listen for Firebase
             window.addEventListener('firebase-ready', () => {
                 window.auth.onAuthStateChanged(async (user) => {
                     if (user) {
                         document.getElementById("loginBtn").innerText = "Logout";
                         document.getElementById("loginBtn").onclick = handleLogout;
                         
-                        // Fetch favorites from Cloud Database
                         try {
                             const docRef = window.doc(window.db, "users", user.uid);
                             const docSnap = await window.getDoc(docRef);
@@ -4366,52 +4381,73 @@
                         } catch(e) { console.log("Db Error:", e); }
                         
                     } else {
-                        document.getElementById("loginBtn").innerText = "Login / Register";
-                        document.getElementById("loginBtn").onclick = handleLoginFlow;
+                        document.getElementById("loginBtn").innerText = "Login";
+                        document.getElementById("loginBtn").onclick = openLoginModal;
                         userFavorites = [];
                     }
                     refreshFavoriteUI();
                 });
             });
 
-            async function handleLoginFlow() {
-                let email = prompt("Enter your email:");
-                if (!email) return;
-                let password = prompt("Enter your password (min 6 characters):");
-                if (!password) return;
+            // --- NEW UI MODAL LOGIC ---
+            function openLoginModal() {
+                document.getElementById('loginMessage').style.display = 'none'; // clear old errors
+                document.getElementById('emailInput').value = '';
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('login-modal').style.display = 'flex';
+            }
+
+            function closeLoginModal() {
+                document.getElementById('login-modal').style.display = 'none';
+            }
+
+            async function submitLogin() {
+                let email = document.getElementById("emailInput").value.trim();
+                let password = document.getElementById("passwordInput").value;
+                let msgBox = document.getElementById("loginMessage");
+                
+                if (!email || !password) {
+                    msgBox.innerText = "Please fill in both fields.";
+                    msgBox.style.display = "block";
+                    return;
+                }
 
                 try {
                     // Try to log in
                     await window.signInWithEmailAndPassword(window.auth, email, password);
-                    alert("Welcome back!");
+                    closeLoginModal();
                 } catch (error) {
-                    // If account doesn't exist, ask to register
+                    // If account doesn't exist, ask to register natively in the modal
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                        if(confirm("Account not found. Do you want to create a new account with this email?")) {
-                            try {
-                                await window.createUserWithEmailAndPassword(window.auth, email, password);
-                                alert("Account successfully created!");
-                            } catch(err) {
-                                alert("Registration error: " + err.message);
-                            }
+                        msgBox.style.color = "#f39c12"; // Yellow warning
+                        msgBox.innerText = "Account not found. Creating a new account...";
+                        msgBox.style.display = "block";
+                        
+                        try {
+                            await window.createUserWithEmailAndPassword(window.auth, email, password);
+                            closeLoginModal();
+                        } catch(err) {
+                            msgBox.style.color = "#e74c3c"; // Red error
+                            msgBox.innerText = "Registration error: " + err.message;
                         }
                     } else {
-                        alert("Login Error: " + error.message);
+                        msgBox.style.color = "#e74c3c"; // Red error
+                        msgBox.innerText = "Login Error: " + error.message;
+                        msgBox.style.display = "block";
                     }
                 }
             }
 
             async function handleLogout() {
                 await window.signOut(window.auth);
-                alert("You have been logged out.");
-                filterItems(); // Reset the screen if "Show Favorites" was active
+                filterItems(); // Reset the screen
             }
 
             async function toggleFavorite(event, ean) {
                 event.preventDefault(); 
                 
                 if (!window.auth || !window.auth.currentUser) {
-                    alert("Please click 'Login / Register' to save favorites to the cloud!");
+                    openLoginModal(); // Pop open the new UI modal if they aren't logged in!
                     return;
                 }
                 
@@ -4424,7 +4460,6 @@
                     btn.innerText = "❤️";
                 }
                 
-                // Save immediately to Firebase Cloud
                 try {
                     const docRef = window.doc(window.db, "users", window.auth.currentUser.uid);
                     await window.setDoc(docRef, { favorites: userFavorites });
