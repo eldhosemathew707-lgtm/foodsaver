@@ -7,7 +7,6 @@ from datetime import datetime, timezone, timedelta
 TOKEN = os.getenv("SALLING_TOKEN") 
 URL = "https://api.sallinggroup.com/v1/food-waste/"
 ZIP_CODE = "6400"
-PLACEHOLDER_IMG = "https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto"
 
 def get_clearance_data():
     headers = {"Authorization": f"Bearer {TOKEN}"}
@@ -73,10 +72,8 @@ def generate_html(data):
             window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
             window.signOut = signOut;
             window.sendPasswordResetEmail = sendPasswordResetEmail; 
-            
             window.googleProvider = new GoogleAuthProvider();
             window.signInWithPopup = signInWithPopup;
-            
             window.doc = doc;
             window.setDoc = setDoc;
             window.getDoc = getDoc;
@@ -91,20 +88,25 @@ def generate_html(data):
             .header-top {{ display: flex; align-items: center; justify-content: space-between; }} 
             h1 {{ margin: 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}}
             
+            .header-buttons {{ display: flex; align-items: center; gap: 8px; }}
+            
+            /* NEW: CART BUTTON STYLE */
+            #cartBtn {{ background: #e67e22; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; display: none; }}
+            #cartBtn:hover {{ background: #d35400; }}
+            #cartBtn.active-cart {{ background: #2ecc71; }}
+            #cartBtn.active-cart:hover {{ background: #27ae60; }}
+
             #loginBtn {{ background: #3498db; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }}
             #loginBtn:hover {{ background: #2980b9; }}
             #mobile-menu-btn {{ display: none; }}
             
             .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; align-items: center; margin-top: 15px; }}
             .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
-            .fav-filter-container {{ display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 12px 16px; border-radius: 25px; border: 1px solid #444; cursor: pointer; color: #fff; font-size: 0.95em; font-weight: 600; user-select: none; transition: 0.2s; }}
-            .fav-filter-container input {{ width: auto; margin: 0; cursor: pointer; accent-color: #e74c3c; }}
 
-            /* LOGIN MODAL STYLES */
+            /* MODAL STYLES */
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }}
             .modal-content {{ background: #1e1e1e; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position: relative; }}
             .modal-content h2 {{ margin-top: 0; color: #fff; font-size: 1.5em; margin-bottom: 20px; text-align: center; }}
-            
             .google-btn {{ background: #fff; color: #333; padding: 10px; border: none; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; font-family: 'Inter', sans-serif;}}
             .google-btn:hover {{ background: #f1f1f1; }}
             .google-icon {{ width: 20px; height: 20px; }}
@@ -112,15 +114,10 @@ def generate_html(data):
             .divider::before, .divider::after {{ content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: #444; }}
             .divider::before {{ left: 0; }}
             .divider::after {{ right: 0; }}
-
             .modal-content input {{ width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; box-sizing: border-box; font-family: 'Inter', sans-serif; }}
-            .modal-content input:focus {{ border-color: #3498db; outline: none; }}
             .forgot-password {{ text-align: right; margin-top: -10px; margin-bottom: 15px; font-size: 0.85em; color: #3498db; cursor: pointer; transition: 0.2s; }}
-            .forgot-password:hover {{ text-decoration: underline; color: #2980b9; }}
             .modal-btn {{ background: #2ecc71; color: white; padding: 12px; border: none; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; transition: 0.2s; }}
-            .modal-btn:hover {{ background: #27ae60; }}
             .close-modal {{ position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2em; font-weight: bold; transition: 0.2s; }}
-            .close-modal:hover {{ color: #fff; }}
 
             .close-sidebar-btn {{ display: none; }}
             #sidebar-overlay {{ display: none; }}
@@ -140,7 +137,12 @@ def generate_html(data):
             
             .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
             .new-badge {{ position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
-            .fav-btn {{ position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; cursor: pointer; z-index: 10; transition: 0.2s; backdrop-filter: blur(4px); }}
+            
+            /* NEW: ADD TO CART BUTTON ON PRODUCTS */
+            .cart-add-btn {{ position: absolute; bottom: 10px; right: 10px; background: #3498db; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85em; cursor: pointer; z-index: 10; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }}
+            .cart-add-btn:hover {{ background: #2980b9; transform: scale(1.05); }}
+            .cart-add-btn.added {{ background: #2ecc71; color: #121212; }}
+            .cart-add-btn.added:hover {{ background: #27ae60; }}
             
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
             .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800;}}
@@ -160,14 +162,14 @@ def generate_html(data):
 
             @media (max-width: 768px) {{
                 .header-container {{ padding: 12px 15px; }}
-                h1 {{ font-size: 1.25em; }}
-                #mobile-menu-btn {{ display: inline-block; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 6px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; margin-left: 8px;}}
-                #loginBtn {{ padding: 6px 12px; font-size: 0.9em; }}
+                h1 {{ font-size: 1.15em; }}
+                #mobile-menu-btn {{ display: inline-block; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 8px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; }}
+                #loginBtn, #cartBtn {{ padding: 8px 12px; font-size: 0.9em; }}
+                .header-buttons {{ gap: 5px; }}
                 
                 .controls {{ position: fixed; top: 0; left: -300px; width: 260px; height: 100%; background: #1a1a1a; flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8); z-index: 1001; overflow-y: auto; margin-top: 0;}}
                 .controls.open {{ left: 0; }}
                 .controls input, .controls select {{ max-width: 100%; width: 100%; box-sizing: border-box; }}
-                .fav-filter-container {{ max-width: 100%; width: 100%; box-sizing: border-box; justify-content: flex-start; }}
                 
                 .close-sidebar-btn {{ display: block; background: none; border: none; color: #fff; font-size: 1.5em; font-weight: bold; text-align: right; margin-bottom: 15px; cursor: pointer; }}
                 #sidebar-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; opacity: 0; visibility: hidden; transition: 0.3s; }}
@@ -209,7 +211,8 @@ def generate_html(data):
         <div class="header-container">
             <div class="header-top">
                 <h1>🛒 Food Rescue</h1>
-                <div>
+                <div class="header-buttons">
+                    <button id="cartBtn" onclick="toggleCartView()">🛒 Cart (0)</button>
                     <button id="loginBtn" onclick="openLoginModal()">Login</button>
                     <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters</button>
                 </div>
@@ -227,11 +230,6 @@ def generate_html(data):
                     <option value="price-asc">Price: Low to High</option>
                     <option value="discount-desc">Discount: High to Low</option>
                 </select>
-                
-                <label class="fav-filter-container">
-                    <input type="checkbox" id="favFilter" onchange="filterItems()"> 
-                    <span>⭐ Favorites Only</span>
-                </label>
             </div>
         </div>
         <div class="main-content">
@@ -287,35 +285,25 @@ def generate_html(data):
                 except Exception: pass
                 new_badge_html = '<div class="new-badge">✨ NEW</div>' if is_new else ''
 
-                # --- UPDATED ROBUST EMOJI LOGIC ---
-                cat_full = item['product'].get('categories', {}).get('en', 'General')
-                cat_text = cat_full.split('>')[-1]
+                cat_text = item['product'].get('categories', {}).get('en', 'General').split('>')[-1]
+                
+                # --- NEW SMART EMOJI LOGIC ---
                 img_src = item['product'].get('image')
-
-                if img_src:
-                    # If it has an image, render the normal image tag
-                    image_html = f'<img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src=\'{PLACEHOLDER_IMG}\';">'
-                else:
-                    # If image is null, check category AND description to assign emoji
-                    cat_lower = cat_full.lower()
-                    desc_lower = desc.lower()
-                    
-                    if 'meat' in cat_lower or 'pork' in cat_lower or 'chicken' in cat_lower or 'sausage' in cat_lower or 'svin' in desc_lower or 'kød' in desc_lower or 'lever' in desc_lower or 'kylling' in desc_lower:
+                if not img_src:
+                    cat_lower = cat_text.lower()
+                    if 'meat' in cat_lower or 'pork' in cat_lower or 'beef' in cat_lower or 'sausage' in cat_lower:
                         emoji = "🥩"
-                    elif 'dairy' in cat_lower or 'cheese' in cat_lower or 'milk' in cat_lower or 'ost' in desc_lower or 'gouda' in desc_lower:
+                    elif 'dairy' in cat_lower or 'cheese' in cat_lower or 'milk' in cat_lower:
                         emoji = "🧀"
-                    elif 'bread' in cat_lower or 'bun' in cat_lower or 'brød' in desc_lower or 'boller' in desc_lower:
+                    elif 'bread' in cat_lower or 'cake' in cat_lower or 'bun' in cat_lower:
                         emoji = "🥐"
-                    elif 'beverage' in cat_lower or 'juice' in cat_lower or 'drink' in cat_lower:
+                    elif 'beverage' in cat_lower or 'juice' in cat_lower:
                         emoji = "🧃"
-                    elif 'fruit' in cat_lower or 'vegetable' in cat_lower or 'salad' in cat_lower or 'salat' in desc_lower:
+                    elif 'fruit' in cat_lower or 'vegetable' in cat_lower or 'salad' in cat_lower:
                         emoji = "🥗"
                     else:
                         emoji = "🛒"
-                    
-                    # Renders a pure HTML Box so it works safely without APIs
-                    image_html = f'<div class="product-img" style="font-size: 5rem; display: flex; align-items: center; justify-content: center; background: #252525; margin: 0; padding: 0;">{emoji}</div>'
-                # --- END EMOJI LOGIC ---
+                    img_src = f"https://placehold.co/400x300/252525/555555?text={emoji}"
 
                 if stock_unit == 'kg': stock_display_val = f"{round(stock, 2)} kg"
                 else: stock_display_val = f"{int(stock)} {stock_unit}"
@@ -326,8 +314,11 @@ def generate_html(data):
                     <div class="img-container">
                         {new_badge_html}
                         <div class="discount-badge">-{percent}%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '{ean}')">🤍</button>
-                        {image_html}
+                        
+                        <!-- NEW CART BUTTON -->
+                        <button class="cart-add-btn" onclick="toggleCart(event, '{ean}')">🛒 Add</button>
+                        
+                        <img src="{img_src}" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/555555?text=🛒';">
                     </div>
                     <div class="info">
                         <div class="category">{cat_text}</div>
@@ -353,33 +344,42 @@ def generate_html(data):
         <div class="site-footer">🟢 Live data last updated: <span>{update_time}</span></div>
         
         <script>
-            let userFavorites = [];
+            // NEW: Updated to userCart
+            let userCart = [];
+            let isCartView = false;
 
+            // Listen for Firebase
             window.addEventListener('firebase-ready', () => {{
                 window.auth.onAuthStateChanged(async (user) => {{
                     if (user) {{
                         document.getElementById("loginBtn").innerText = "Logout";
                         document.getElementById("loginBtn").onclick = handleLogout;
+                        document.getElementById("cartBtn").style.display = "inline-block";
                         
                         try {{
                             const docRef = window.doc(window.db, "users", user.uid);
                             const docSnap = await window.getDoc(docRef);
-                            if (docSnap.exists()) {{
-                                userFavorites = docSnap.data().favorites || [];
+                            // Read cart from DB
+                            if (docSnap.exists() && docSnap.data().cart) {{
+                                userCart = docSnap.data().cart;
                             }} else {{
-                                userFavorites = [];
+                                userCart = [];
                             }}
                         }} catch(e) {{ console.log("Db Error:", e); }}
                         
                     }} else {{
                         document.getElementById("loginBtn").innerText = "Login";
                         document.getElementById("loginBtn").onclick = openLoginModal;
-                        userFavorites = [];
+                        document.getElementById("cartBtn").style.display = "none";
+                        userCart = [];
+                        isCartView = false;
                     }}
-                    refreshFavoriteUI();
+                    refreshCartUI();
+                    filterItems();
                 }});
             }});
 
+            // --- UI MODAL LOGIC ---
             function openLoginModal() {{
                 document.getElementById('loginMessage').style.display = 'none'; 
                 document.getElementById('emailInput').value = '';
@@ -434,4 +434,196 @@ def generate_html(data):
                             if (err.code === 'auth/email-already-in-use') {{
                                 msgBox.style.color = "#e74c3c";
                                 msgBox.innerHTML = "❌ The password is wrong.<br><br>Click the blue <b>'Forgot password?'</b> text above to reset it!";
+                            }} else {{
+                                msgBox.style.color = "#e74c3c";
+                                msgBox.innerText = "Error: " + err.message;
                             }}
+                            msgBox.style.display = "block";
+                        }}
+                    }} else {{
+                        msgBox.style.color = "#e74c3c"; 
+                        msgBox.innerText = "Login Error: " + error.message;
+                        msgBox.style.display = "block";
+                    }}
+                }}
+            }}
+
+            async function handleForgotPassword() {{
+                let email = document.getElementById("emailInput").value.trim();
+                let msgBox = document.getElementById("loginMessage");
+
+                if (!email) {{
+                    msgBox.style.color = "#e74c3c";
+                    msgBox.innerText = "Please enter your email address in the box first.";
+                    msgBox.style.display = "block";
+                    return;
+                }}
+
+                try {{
+                    await window.sendPasswordResetEmail(window.auth, email);
+                    msgBox.style.color = "#2ecc71"; 
+                    msgBox.innerText = "Reset email sent! Please check your inbox.";
+                    msgBox.style.display = "block";
+                }} catch (error) {{
+                    msgBox.style.color = "#e74c3c";
+                    msgBox.innerText = "Error: " + error.message;
+                    msgBox.style.display = "block";
+                }}
+            }}
+
+            async function handleLogout() {{
+                await window.signOut(window.auth);
+            }}
+
+            // --- NEW: CART LOGIC ---
+            async function toggleCart(event, ean) {{
+                event.preventDefault(); 
+                
+                if (!window.auth || !window.auth.currentUser) {{
+                    openLoginModal(); 
+                    return;
+                }}
+                
+                if (userCart.includes(ean)) {{
+                    userCart = userCart.filter(id => id !== ean);
+                }} else {{
+                    userCart.push(ean);
+                }}
+                
+                refreshCartUI();
+                if(isCartView) filterItems();
+                
+                try {{
+                    const docRef = window.doc(window.db, "users", window.auth.currentUser.uid);
+                    await window.setDoc(docRef, {{ cart: userCart }}, {{ merge: true }});
+                }} catch(e) {{
+                    alert("Error saving to cloud: " + e.message);
+                }}
+            }}
+
+            function refreshCartUI() {{
+                // Update product buttons
+                document.querySelectorAll('.product-card').forEach(card => {{
+                    let ean = card.getAttribute('data-ean');
+                    let btn = card.querySelector('.cart-add-btn');
+                    if(userCart.includes(ean)) {{
+                        btn.innerText = "✅ Added";
+                        btn.classList.add("added");
+                    }} else {{
+                        btn.innerText = "🛒 Add";
+                        btn.classList.remove("added");
+                    }}
+                }});
+                
+                // Update top header button
+                let cartBtn = document.getElementById("cartBtn");
+                if (cartBtn) {{
+                    if (isCartView) {{
+                        cartBtn.innerText = `❌ Close Cart (${userCart.length})`;
+                    }} else {{
+                        cartBtn.innerText = `🛒 Cart (${userCart.length})`;
+                    }}
+                }}
+            }}
+
+            function toggleCartView() {{
+                isCartView = !isCartView;
+                let cartBtn = document.getElementById("cartBtn");
+                if(isCartView) {{
+                    cartBtn.classList.add("active-cart");
+                }} else {{
+                    cartBtn.classList.remove("active-cart");
+                }}
+                refreshCartUI();
+                filterItems();
+            }}
+
+            // --- MENU & FILTERING LOGIC ---
+            function toggleSidebar() {{
+                document.getElementById("sidebar").classList.toggle("open");
+                document.getElementById("sidebar-overlay").classList.toggle("open");
+            }}
+
+            function filterItems() {{
+                let searchVal = document.getElementById("searchInput").value.toLowerCase();
+                let storeVal = document.getElementById("storeSelect").value;
+                let storeGroups = document.querySelectorAll(".store-container");
+                
+                storeGroups.forEach(group => {{
+                    let storeName = group.getAttribute("data-store");
+                    let isStoreMatch = (storeVal === "all" || storeVal === storeName);
+                    let cards = group.querySelectorAll(".product-card");
+                    let visibleCards = 0;
+                    
+                    cards.forEach(card => {{
+                        let text = card.innerText.toLowerCase();
+                        let ean = card.getAttribute('data-ean');
+                        let matchesSearch = text.includes(searchVal);
+                        
+                        // NEW: Filter by cart view!
+                        let matchesCart = !isCartView || userCart.includes(ean);
+                        
+                        if (isStoreMatch && matchesSearch && matchesCart) {{
+                            card.style.display = "flex";
+                            visibleCards++;
+                        }} else {{
+                            card.style.display = "none";
+                        }}
+                    }});
+                    group.style.display = (visibleCards > 0) ? "block" : "none";
+                }});
+            }}
+
+            function sortItems() {{
+                let sortVal = document.getElementById("sortSelect").value;
+                document.querySelectorAll(".store-container").forEach(group => {{
+                    let grid = group.querySelector(".product-grid");
+                    let cards = Array.from(grid.querySelectorAll(".product-card"));
+
+                    if (sortVal !== "default") {{
+                        cards.sort((a, b) => {{
+                            let priceA = parseFloat(a.querySelector(".new-price").innerText);
+                            let priceB = parseFloat(b.querySelector(".new-price").innerText);
+                            let discA = parseFloat(a.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
+                            let discB = parseFloat(b.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
+                            let dateA = new Date(a.getAttribute("data-start"));
+                            let dateB = new Date(b.getAttribute("data-start"));
+
+                            if (sortVal === "price-asc") return priceA - priceB;
+                            if (sortVal === "discount-desc") return discB - discA; 
+                            if (sortVal === "date-new") return dateB - dateA; 
+                            return 0;
+                        }});
+                    }}
+                    cards.forEach(card => grid.appendChild(card));
+                }});
+                if(window.innerWidth <= 768) toggleSidebar();
+            }}
+
+            document.addEventListener('DOMContentLoaded', () => {{
+                let currentHour = new Date().getHours();
+                document.querySelectorAll(".traffic-badge").forEach(badge => {{
+                    let flowStr = badge.getAttribute("data-flow");
+                    if (flowStr && flowStr !== "[]") {{
+                        let flowData = JSON.parse(flowStr);
+                        let flow = flowData[currentHour];
+                        if (flow === 0) badge.innerHTML = "🌙 Closed";
+                        else if (flow < 0.20) badge.innerHTML = "🟢 Quiet right now";
+                        else if (flow < 0.40) badge.innerHTML = "🟡 Steady traffic";
+                        else badge.innerHTML = "🔴 Busy right now";
+                    }} else badge.innerHTML = "⚪ No traffic data";
+                }});
+            }});
+        </script>
+    </body></html>
+    """
+
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print("Success: 'index.html' created.")
+
+data = get_clearance_data()
+if data:
+    generate_html(data)
+else:
+    print("Failed to generate HTML: No data was found.")
