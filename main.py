@@ -172,7 +172,7 @@ def generate_html(data):
                 <span class="close-modal" onclick="closeLoginModal()">✕</span>
                 <h2>Login / Register</h2>
                 <input type="email" id="emailInput" placeholder="Email address" required>
-                <input type="password" id="passwordInput" placeholder="Password (min. 6 chars)" required>
+                <input type="password" id="passwordInput" placeholder="Password (min. 6 chars)">
                 
                 <div class="forgot-password" onclick="handleForgotPassword()">Forgot password?</div>
                 
@@ -346,9 +346,18 @@ def generate_html(data):
                 let password = document.getElementById("passwordInput").value;
                 let msgBox = document.getElementById("loginMessage");
                 
-                if (!email || !password) {{
+                // 1. If they left everything blank or just email blank
+                if (!email) {{
                     msgBox.style.color = "#e74c3c";
-                    msgBox.innerText = "Please fill in both fields.";
+                    msgBox.innerText = "Please enter your email address first.";
+                    msgBox.style.display = "block";
+                    return;
+                }}
+
+                // 2. THE FIX: If they typed an email but don't know the password
+                if (!password) {{
+                    msgBox.style.color = "#f39c12"; // Yellow warning color
+                    msgBox.innerHTML = "Password is required to login.<br><br><b>Forgot it?</b> Click the blue 'Forgot password?' text right above this button!";
                     msgBox.style.display = "block";
                     return;
                 }}
@@ -364,7 +373,6 @@ def generate_html(data):
                             await window.createUserWithEmailAndPassword(window.auth, email, password);
                             closeLoginModal();
                         }} catch(err) {{
-                            // THE FIX: Account exists, wrong password
                             if (err.code === 'auth/email-already-in-use') {{
                                 msgBox.style.color = "#e74c3c";
                                 msgBox.innerText = "Incorrect password. Please try again or use 'Forgot password?'.";
