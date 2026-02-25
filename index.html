@@ -15,27 +15,59 @@
           gtag('js', new Date());
           gtag('config', 'G-6Y185D49HV');
         </script>
+
+        <!-- FIREBASE SDK INJECTION -->
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+            import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+            import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+            // TODO: PASTE YOUR FIREBASE CONFIG HERE:
+            const firebaseConfig = {
+                apiKey: "AIzaSyBB6C2ipV6hRF7F_CEWQtb2ENx94CLuGKM",
+                authDomain: "food-rescueapp.firebaseapp.com",
+                projectId: "food-rescueapp",
+                storageBucket: "food-rescueapp.firebasestorage.app",
+                messagingSenderId: "201559525774",
+                appId: "1:201559525774:web:420f9fc505ae453a04bcdf"
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            window.auth = getAuth(app);
+            window.db = getFirestore(app);
+            window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+            window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+            window.signOut = signOut;
+            window.doc = doc;
+            window.setDoc = setDoc;
+            window.getDoc = getDoc;
+            
+            // Fire an event when Firebase is fully loaded
+            window.dispatchEvent(new Event('firebase-ready'));
+        </script>
         
         <style>
             body { font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; overflow-x: hidden; }
             
             /* Header */
             .header-container { background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; transition: all 0.3s ease;}
-            .header-top { display: block; } 
-            h1 { text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}
+            .header-top { display: flex; align-items: center; justify-content: space-between; } 
+            h1 { margin: 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}
             
-            /* Sidebar & Controls Container */
-            .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; align-items: center;}
+            /* Buttons */
+            #loginBtn { background: #3498db; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+            #loginBtn:hover { background: #2980b9; }
+            #mobile-menu-btn { display: none; }
+            
+            /* Controls */
+            .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; align-items: center; margin-top: 15px; }
             .controls input, .controls select { padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}
-            .controls input:focus, .controls select:focus { border-color: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);}
             
-            /* Favorites Toggle */
             .fav-filter-container { display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 12px 16px; border-radius: 25px; border: 1px solid #444; cursor: pointer; color: #fff; font-size: 0.95em; font-weight: 600; user-select: none; transition: 0.2s; }
-            .fav-filter-container:hover { border-color: #e74c3c; }
             .fav-filter-container input { width: auto; margin: 0; cursor: pointer; accent-color: #e74c3c; }
 
             /* Mobile Toggle Buttons */
-            #mobile-menu-btn { display: none; }
             .close-sidebar-btn { display: none; }
             #sidebar-overlay { display: none; }
 
@@ -49,19 +81,13 @@
             .traffic-badge { font-size: 0.75em; font-weight: 600; padding: 6px 12px; border-radius: 20px; background: #2a2a2a; color: #aaa; border: 1px solid #444;}
             .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
             .product-card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column; position: relative;}
-            .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.5); border-color: #555;}
             .img-container { width: 100%; height: 160px; background: #252525; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #333;}
-            .product-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }
-            .product-card:hover .product-img { transform: scale(1.08); }
+            .product-img { width: 100%; height: 100%; object-fit: contain; }
             
-            /* Badges */
             .discount-badge { position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}
             .new-badge { position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}
-            
-            /* Favorite Button */
             .fav-btn { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; cursor: pointer; z-index: 10; transition: 0.2s; backdrop-filter: blur(4px); }
-            .fav-btn:hover { transform: scale(1.1); background: rgba(0,0,0,0.8); }
-
+            
             .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
             .category { font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800;}
             .title { font-weight: 600; font-size: 0.95em; margin-bottom: 12px; line-height: 1.4; color: #ffffff; flex-grow: 1; }
@@ -75,18 +101,16 @@
             .expire-alert { color: #ff6b6b; font-weight: 800; background: rgba(255, 107, 107, 0.1); padding: 3px 8px; border-radius: 6px;}
             .low-stock { color: #f39c12; font-weight: 800; display: flex; align-items: center; gap: 4px; background: rgba(243, 156, 18, 0.1); padding: 2px 6px; border-radius: 4px;}
             
-            /* Footer */
             .site-footer { text-align: center; padding: 25px; color: #888; font-size: 0.9em; border-top: 1px solid #333; background-color: #1a1a1a; margin-top: 20px; }
             .site-footer span { color: #2ecc71; font-weight: 600; }
 
-            /* --- ULTRA-THIN MOBILE HEADER FIX --- */
             @media (max-width: 768px) {
                 .header-container { padding: 12px 15px; }
-                .header-top { display: flex; align-items: center; justify-content: space-between; }
-                h1 { margin: 0; font-size: 1.25em; text-align: left;}
-                #mobile-menu-btn { display: inline-block; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 6px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; white-space: nowrap;}
+                h1 { font-size: 1.25em; }
+                #mobile-menu-btn { display: inline-block; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 6px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; margin-left: 8px;}
+                #loginBtn { padding: 6px 12px; font-size: 0.9em; }
                 
-                .controls { position: fixed; top: 0; left: -300px; width: 260px; height: 100%; background: #1a1a1a; flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8); z-index: 1001; overflow-y: auto; }
+                .controls { position: fixed; top: 0; left: -300px; width: 260px; height: 100%; background: #1a1a1a; flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8); z-index: 1001; overflow-y: auto; margin-top: 0;}
                 .controls.open { left: 0; }
                 .controls input, .controls select { max-width: 100%; width: 100%; box-sizing: border-box; }
                 .fav-filter-container { max-width: 100%; width: 100%; box-sizing: border-box; justify-content: flex-start; }
@@ -103,7 +127,10 @@
         <div class="header-container">
             <div class="header-top">
                 <h1>🛒 Food Rescue</h1>
-                <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters</button>
+                <div>
+                    <button id="loginBtn" onclick="handleLoginFlow()">Login / Register</button>
+                    <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters</button>
+                </div>
             </div>
             
             <div class="controls" id="sidebar">
@@ -115,13 +142,10 @@
                 <select id="sortSelect" onchange="sortItems()">
                     <option value="default">Sort: Default</option>
                     <option value="date-new">Date: Newest First</option>
-                    <option value="date-old">Date: Oldest First</option>
                     <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
                     <option value="discount-desc">Discount: High to Low</option>
                 </select>
                 
-                <!-- NEW FAVORITES FILTER -->
                 <label class="fav-filter-container">
                     <input type="checkbox" id="favFilter" onchange="filterItems()"> 
                     <span>⭐ Favorites Only</span>
@@ -155,29 +179,6 @@
                     <div class="meta-info">
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.02 kg left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 07:52</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T05:54:30.000Z" data-ean="2006611">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-42%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '2006611')">🤍</button>
-                        <img src="https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">General</div>
-                        <div class="title">FERSK SPÆK</div>
-                        <div class="price-box">
-                            <span class="new-price">34.74 kr.</span>
-                            <span class="old-price">59.9 kr.</span>
-                        </div>
-                        <div class="savings">Save 25.16 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.02 kg left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 05:54</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
                     </div>
                 </div>
@@ -248,6 +249,29 @@
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.02 kg left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 05:41</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T11:11:37.000Z" data-ean="2006741">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-40.04%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '2006741')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/ca436757275f86806ba5c7d060faa1ee" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pork Neck Pork Loin</div>
+                        <div class="title">GRILLROAST SLAGTEREN</div>
+                        <div class="price-box">
+                            <span class="new-price">80.95 kr.</span>
+                            <span class="old-price">135 kr.</span>
+                        </div>
+                        <div class="savings">Save 54.05 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.03 kg left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 11:11</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 
@@ -343,75 +367,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-23T17:55:57.000Z" data-ean="5712580513126">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-62.05%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580513126')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/e17bbfea960cfdd56d58885c08d79675" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Other Mayo Salads</div>
-                        <div class="title">KARRYSALAT K-SALAT</div>
-                        <div class="price-box">
-                            <span class="new-price">7.95 kr.</span>
-                            <span class="old-price">20.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 13.00 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 17:55</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-22T16:33:29.000Z" data-ean="5712580509181">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-37.62%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580509181')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Liver Paste Patee</div>
-                        <div class="title">BACON POSTEJ STRYHNS</div>
-                        <div class="price-box">
-                            <span class="new-price">9.95 kr.</span>
-                            <span class="old-price">15.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 6.00 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 16:33</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-22T16:34:56.000Z" data-ean="5712580509266">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-47.73%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580509266')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/a298b068968ebc6f3b2a307ea05e2d40" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Roastbeef</div>
-                        <div class="title">ROASTBEEF PÅLÆKKER</div>
-                        <div class="price-box">
-                            <span class="new-price">10.95 kr.</span>
-                            <span class="old-price">20.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 10.00 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 16:34</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-23T05:44:03.000Z" data-ean="5712580509648">
                     <div class="img-container">
                         
@@ -452,7 +407,7 @@
                         <div class="savings">Save 23.23 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>7 each</strong></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 17:54</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
@@ -498,32 +453,9 @@
                         <div class="savings">Save 8.00 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 16:25</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-23T17:55:41.000Z" data-ean="5712580513119">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-41.13%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580513119')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/3aaef80fd8677c974ab7bfa076e2eb57" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Pork Sausages</div>
-                        <div class="title">HOTDOG PØLSER SALLING</div>
-                        <div class="price-box">
-                            <span class="new-price">19.95 kr.</span>
-                            <span class="old-price">33.89 kr.</span>
-                        </div>
-                        <div class="savings">Save 13.94 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 17:55</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 
@@ -590,31 +522,8 @@
                         <div class="savings">Save 11.14 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 17:22</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T17:26:37.000Z" data-ean="5712580521947">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-37.85%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580521947')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f8291c946b2337011645e77a43b1f9aa" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Whipping Cream</div>
-                        <div class="title">PISKEFLØDE SALLING ØKO</div>
-                        <div class="price-box">
-                            <span class="new-price">9.95 kr.</span>
-                            <span class="old-price">16.01 kr.</span>
-                        </div>
-                        <div class="savings">Save 6.06 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 17:26</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
@@ -734,29 +643,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-24T17:52:01.000Z" data-ean="5712580522043">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-35.84%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580522043')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/091edb52-9d4a-41c1-b0e9-a76d4a27df16" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Buttermilk</div>
-                        <div class="title">KÆRNEMÆLK ARLA</div>
-                        <div class="price-box">
-                            <span class="new-price">8.95 kr.</span>
-                            <span class="old-price">13.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 5.00 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 17:52</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-24T17:27:04.000Z" data-ean="5712580521954">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -780,71 +666,25 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T04:57:20.000Z" data-ean="5712580522098">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-38.7%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580522098')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/b90cd770-7f43-4ebe-8322-33e5333eea58" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Toast Breads</div>
-                        <div class="title">HAVREBR. KERNER SALLING</div>
-                        <div class="price-box">
-                            <span class="new-price">7.95 kr.</span>
-                            <span class="old-price">12.97 kr.</span>
-                        </div>
-                        <div class="savings">Save 5.02 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 04:57</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T17:15:58.000Z" data-ean="5712580521879">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-45.66%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580521879')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/d8ab36309e0c3ced41fb9ef866a16820" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Soured Milk</div>
-                        <div class="title">MILD HINDBÆR ARLA A38</div>
-                        <div class="price-box">
-                            <span class="new-price">10.95 kr.</span>
-                            <span class="old-price">20.15 kr.</span>
-                        </div>
-                        <div class="savings">Save 9.20 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>7 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 17:15</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-22T15:25:37.000Z" data-ean="5712580508924">
+                <div class="product-card" data-start="2026-02-22T16:34:56.000Z" data-ean="5712580509266">
                     <div class="img-container">
                         
-                        <div class="discount-badge">-46.18%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580508924')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/7e386c13-7c1d-4f8b-bc9b-7cea6d502695" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                        <div class="discount-badge">-47.73%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580509266')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/a298b068968ebc6f3b2a307ea05e2d40" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
                     </div>
                     <div class="info">
-                        <div class="category">Pesto Hummus</div>
-                        <div class="title">HUMMUS HVIDLØG SALLING</div>
+                        <div class="category">Roastbeef</div>
+                        <div class="title">ROASTBEEF PÅLÆKKER</div>
                         <div class="price-box">
-                            <span class="new-price">12.95 kr.</span>
-                            <span class="old-price">24.06 kr.</span>
+                            <span class="new-price">10.95 kr.</span>
+                            <span class="old-price">20.95 kr.</span>
                         </div>
-                        <div class="savings">Save 11.11 kr.</div>
+                        <div class="savings">Save 10.00 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 15:25</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 16:34</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
                     </div>
                 </div>
@@ -941,29 +781,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-01T10:28:35.000Z" data-ean="5712580088938">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-25.43%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580088938')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/6525b51f5844f44ed8bc592e43b9e636" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Snack Cheese</div>
-                        <div class="title">OSTEHAPS LILLEBROR</div>
-                        <div class="price-box">
-                            <span class="new-price">30 kr.</span>
-                            <span class="old-price">40.23 kr.</span>
-                        </div>
-                        <div class="savings">Save 10.23 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>305 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-01 10:28</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-03 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-12T07:52:46.000Z" data-ean="5712580466347">
                     <div class="img-container">
                         
@@ -984,6 +801,190 @@
                         <div class="meta-row"><span>📦 Stock:</span> <strong>24 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-12 07:52</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-28 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-22T15:25:37.000Z" data-ean="5712580508924">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-46.18%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580508924')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/7e386c13-7c1d-4f8b-bc9b-7cea6d502695" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pesto Hummus</div>
+                        <div class="title">HUMMUS HVIDLØG SALLING</div>
+                        <div class="price-box">
+                            <span class="new-price">12.95 kr.</span>
+                            <span class="old-price">24.06 kr.</span>
+                        </div>
+                        <div class="savings">Save 11.11 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 15:25</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T17:52:01.000Z" data-ean="5712580522043">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-35.84%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580522043')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/091edb52-9d4a-41c1-b0e9-a76d4a27df16" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Buttermilk</div>
+                        <div class="title">KÆRNEMÆLK ARLA</div>
+                        <div class="price-box">
+                            <span class="new-price">8.95 kr.</span>
+                            <span class="old-price">13.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 5.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 17:52</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-01T10:28:35.000Z" data-ean="5712580088938">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-25.43%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580088938')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/6525b51f5844f44ed8bc592e43b9e636" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Snack Cheese</div>
+                        <div class="title">OSTEHAPS LILLEBROR</div>
+                        <div class="price-box">
+                            <span class="new-price">30 kr.</span>
+                            <span class="old-price">40.23 kr.</span>
+                        </div>
+                        <div class="savings">Save 10.23 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>301 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-01 10:28</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-03 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-23T18:01:59.000Z" data-ean="5712580513188">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-40.3%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580513188')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Olives Other Attachments</div>
+                        <div class="title">SYLTEDE RØDLØG SUPER KRÆS</div>
+                        <div class="price-box">
+                            <span class="new-price">14.95 kr.</span>
+                            <span class="old-price">25.04 kr.</span>
+                        </div>
+                        <div class="savings">Save 10.09 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 18:01</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-22T16:33:29.000Z" data-ean="5712580509181">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-37.62%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580509181')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Liver Paste Patee</div>
+                        <div class="title">BACON POSTEJ STRYHNS</div>
+                        <div class="price-box">
+                            <span class="new-price">9.95 kr.</span>
+                            <span class="old-price">15.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 6.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 16:33</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-23T17:55:41.000Z" data-ean="5712580513119">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-41.13%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580513119')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/3aaef80fd8677c974ab7bfa076e2eb57" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pork Sausages</div>
+                        <div class="title">HOTDOG PØLSER SALLING</div>
+                        <div class="price-box">
+                            <span class="new-price">19.95 kr.</span>
+                            <span class="old-price">33.89 kr.</span>
+                        </div>
+                        <div class="savings">Save 13.94 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 17:55</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-20T17:56:25.000Z" data-ean="5712580505602">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-41.75%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580505602')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Liver Paste Patee</div>
+                        <div class="title">GROV LET POSTEJ STRYHNS</div>
+                        <div class="price-box">
+                            <span class="new-price">13.95 kr.</span>
+                            <span class="old-price">23.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 10.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-20 17:56</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T17:15:58.000Z" data-ean="5712580521879">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-45.66%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580521879')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/d8ab36309e0c3ced41fb9ef866a16820" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Soured Milk</div>
+                        <div class="title">MILD HINDBÆR ARLA A38</div>
+                        <div class="price-box">
+                            <span class="new-price">10.95 kr.</span>
+                            <span class="old-price">20.15 kr.</span>
+                        </div>
+                        <div class="savings">Save 9.20 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 17:15</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
                     </div>
                 </div>
                 </div></div></div><div class="brand-section" id="brand-foetex"><div class="brand-header foetex">foetex</div><div class="store-container" data-store="føtex Sønderborg">
@@ -1010,7 +1011,7 @@
                         <div class="savings">Save 79.00 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.97 kg left!</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.96 kg left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:52</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
@@ -1036,6 +1037,98 @@
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.94 kg left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 05:41</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T10:57:17.000Z" data-ean="2005201">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-24.24%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '2005201')">🤍</button>
+                        <img src="https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">General</div>
+                        <div class="title">RULLESTEG</div>
+                        <div class="price-box">
+                            <span class="new-price">75 kr.</span>
+                            <span class="old-price">99 kr.</span>
+                        </div>
+                        <div class="savings">Save 24.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.94 kg left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 10:57</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T10:58:13.000Z" data-ean="2005232">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-21%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '2005232')">🤍</button>
+                        <img src="https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">General</div>
+                        <div class="title">SVINEKAM SLAGTEREN</div>
+                        <div class="price-box">
+                            <span class="new-price">37.05 kr.</span>
+                            <span class="old-price">46.9 kr.</span>
+                        </div>
+                        <div class="savings">Save 9.85 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.94 kg left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 10:58</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T10:57:24.000Z" data-ean="2005218">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-5.06%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '2005218')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/905411d7-d8de-4c49-82f6-d2725e385c08" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pork Chops Pork Schnitzels</div>
+                        <div class="title">SCHNITZLER</div>
+                        <div class="price-box">
+                            <span class="new-price">75 kr.</span>
+                            <span class="old-price">79 kr.</span>
+                        </div>
+                        <div class="savings">Save 4.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.94 kg left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 10:57</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T10:58:00.000Z" data-ean="2005225">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-24.24%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '2005225')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/44882215-66c8-4df7-875e-91b5c57da48c" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pork Tenderloin</div>
+                        <div class="title">SVINEMØRBRAD SLAGTEREN</div>
+                        <div class="price-box">
+                            <span class="new-price">75 kr.</span>
+                            <span class="old-price">99 kr.</span>
+                        </div>
+                        <div class="savings">Save 24.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 0.94 kg left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 10:58</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 
@@ -1105,121 +1198,6 @@
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:14</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T09:30:57.000Z" data-ean="5712580612607">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-47.23%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580612607')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Yoghurt</div>
-                        <div class="title">PEACH & PASSION NATURLI</div>
-                        <div class="price-box">
-                            <span class="new-price">10 kr.</span>
-                            <span class="old-price">18.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 8.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 09:30</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-21T11:14:40.000Z" data-ean="5712580604572">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-26.2%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580604572')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/77b8a77f50a0394489f58225217d2a3e" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Smoked Saddle Of Pork</div>
-                        <div class="title">HAMBURGERRYG SALLING</div>
-                        <div class="price-box">
-                            <span class="new-price">10 kr.</span>
-                            <span class="old-price">13.55 kr.</span>
-                        </div>
-                        <div class="savings">Save 3.55 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-21 11:14</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-19T10:11:34.000Z" data-ean="5712580600796">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-33.24%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580600796')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/4c65cc99403fd7f14045d46a81a8fa42" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Meat Sausage</div>
-                        <div class="title">GROV LEV. PØLSE HØJER</div>
-                        <div class="price-box">
-                            <span class="new-price">24 kr.</span>
-                            <span class="old-price">35.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 11.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-19 10:11</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-22T12:32:07.000Z" data-ean="5712580605876">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-33.19%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580605876')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/ed4b1fc3b4d848a22908f55c03b3657a" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Smoothies</div>
-                        <div class="title">VITAMIN SMOOTHI VALSØLILLE</div>
-                        <div class="price-box">
-                            <span class="new-price">16 kr.</span>
-                            <span class="old-price">23.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 7.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>6 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 12:32</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-08 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-19T07:28:56.000Z" data-ean="5712580600406">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-32.42%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580600406')">🤍</button>
-                        <img src="https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">General</div>
-                        <div class="title">MONTANA EXTRA DELIDRENGENE</div>
-                        <div class="price-box">
-                            <span class="new-price">27 kr.</span>
-                            <span class="old-price">39.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 12.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-19 07:28</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
                     </div>
                 </div>
                 
@@ -1315,29 +1293,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-21T10:57:46.000Z" data-ean="5712580604466">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-32.43%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580604466')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/3aaef80fd8677c974ab7bfa076e2eb57" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Pork Sausages</div>
-                        <div class="title">HOTDOG PØLSER SALLING</div>
-                        <div class="price-box">
-                            <span class="new-price">25 kr.</span>
-                            <span class="old-price">37 kr.</span>
-                        </div>
-                        <div class="savings">Save 12.00 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-21 10:57</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-21T11:48:56.000Z" data-ean="5712580604725">
                     <div class="img-container">
                         
@@ -1381,29 +1336,6 @@
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-21 11:46</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T13:51:01.000Z" data-ean="5712580613130">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-70.73%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613130')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/08b25b168e0691d6a0f8c4d94bf4fa3c" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Pita Bread</div>
-                        <div class="title">BFREE PITTA</div>
-                        <div class="price-box">
-                            <span class="new-price">9 kr.</span>
-                            <span class="old-price">30.75 kr.</span>
-                        </div>
-                        <div class="savings">Save 21.75 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 13:51</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-05 22:59</span></div>
                     </div>
                 </div>
                 
@@ -1564,29 +1496,6 @@
                     <div class="meta-info">
                         <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-21 11:12</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-23T13:03:07.000Z" data-ean="5712580608488">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-63.14%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580608488')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/e26eb9a4-98f9-4f63-9699-c51ef6cfd353" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Seeded Rye Breads</div>
-                        <div class="title">VIKING I SKIVER KOHBERG</div>
-                        <div class="price-box">
-                            <span class="new-price">7 kr.</span>
-                            <span class="old-price">18.99 kr.</span>
-                        </div>
-                        <div class="savings">Save 11.99 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>14 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 13:03</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
@@ -1775,52 +1684,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-24T19:26:05.000Z" data-ean="5712580613253">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-58.78%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613253')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/72eb6c2f-4add-4b50-98b9-b980feea2360" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Sun Flower Seeded Rye Breads</div>
-                        <div class="title">SOLSIKKERUGBRØD KOHBERG</div>
-                        <div class="price-box">
-                            <span class="new-price">7 kr.</span>
-                            <span class="old-price">16.98 kr.</span>
-                        </div>
-                        <div class="savings">Save 9.98 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:26</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T19:27:11.000Z" data-ean="5712580613260">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-21.44%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613260')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f8a95b522b45b7ce7178df50d2bfe942" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Seeded Rye Breads</div>
-                        <div class="title">KERNERIGT RUGBRØD SALLING</div>
-                        <div class="price-box">
-                            <span class="new-price">7 kr.</span>
-                            <span class="old-price">8.91 kr.</span>
-                        </div>
-                        <div class="savings">Save 1.91 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:27</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-24T19:27:50.000Z" data-ean="5712580613277">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -1913,72 +1776,26 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-24T19:30:19.000Z" data-ean="5712580613321">
+                <div class="product-card" data-start="2026-02-24T19:30:58.000Z" data-ean="5712580613338">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-66.6%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613321')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/b3f02680-2166-42ba-971c-b08179c1b1d9" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Light Dark Buns</div>
-                        <div class="title">SOLSKINSBOLLER KOHBERG</div>
-                        <div class="price-box">
-                            <span class="new-price">8 kr.</span>
-                            <span class="old-price">23.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 15.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:30</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T19:32:32.000Z" data-ean="5712580613345">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-53.78%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613345')">🤍</button>
+                        <div class="discount-badge">-46.07%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613338')">🤍</button>
                         <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/93670aea-8e15-40c2-a5fd-c8d940d9e5d7" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
                     </div>
                     <div class="info">
                         <div class="category">Toast Breads</div>
                         <div class="title">SURDEJS RUG KLA SALLING ØKO</div>
                         <div class="price-box">
-                            <span class="new-price">6 kr.</span>
+                            <span class="new-price">7 kr.</span>
                             <span class="old-price">12.98 kr.</span>
                         </div>
-                        <div class="savings">Save 6.98 kr.</div>
+                        <div class="savings">Save 5.98 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:32</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>10 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:30</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T05:14:12.000Z" data-ean="5712580613352">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-43.57%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613352')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f70287473e20a003b8feb10539354275" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Liver Paste Patee</div>
-                        <div class="title">FRANSK POSTEJ STRYHNS</div>
-                        <div class="price-box">
-                            <span class="new-price">9 kr.</span>
-                            <span class="old-price">15.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 6.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:14</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
                     </div>
                 </div>
                 
@@ -2051,72 +1868,26 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T05:16:01.000Z" data-ean="5712580613444">
+                <div class="product-card" data-start="2026-02-25T05:15:48.000Z" data-ean="5712580613437">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-74.92%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613444')">🤍</button>
+                        <div class="discount-badge">-43.57%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613437')">🤍</button>
                         <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
                     </div>
                     <div class="info">
                         <div class="category">Sliced Lunch Meats</div>
                         <div class="title">KAMSTEG PÅLÆKKER</div>
                         <div class="price-box">
-                            <span class="new-price">4 kr.</span>
+                            <span class="new-price">9 kr.</span>
                             <span class="old-price">15.95 kr.</span>
                         </div>
-                        <div class="savings">Save 11.95 kr.</div>
+                        <div class="savings">Save 6.95 kr.</div>
                     </div>
                     <div class="meta-info">
                         <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:16</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T05:15:36.000Z" data-ean="5712580613420">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-46.05%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613420')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/263045cd-0e3b-4b44-b0fc-b400a327e689" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Creme Fraiche Quark</div>
-                        <div class="title">CREME FRAICHE KAROLINE'S</div>
-                        <div class="price-box">
-                            <span class="new-price">14 kr.</span>
-                            <span class="old-price">25.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 11.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:15</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T05:46:24.000Z" data-ean="5712580613512">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-29.91%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613512')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/2b5261a76165e5075d063a5278e13ca1" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Minced Pork</div>
-                        <div class="title">HK GRIS 4-7% SLAGTEREN</div>
-                        <div class="price-box">
-                            <span class="new-price">28 kr.</span>
-                            <span class="old-price">39.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 11.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:46</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 
@@ -2161,29 +1932,6 @@
                     </div>
                     <div class="meta-info">
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:51</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T05:51:39.000Z" data-ean="5712580613697">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-51.37%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613697')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/9bcafe031d0cd69816d83ab125c5548a" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Thick Sausages</div>
-                        <div class="title">ØKO MEDISTER SALLING ØKO</div>
-                        <div class="price-box">
-                            <span class="new-price">23 kr.</span>
-                            <span class="old-price">47.3 kr.</span>
-                        </div>
-                        <div class="savings">Save 24.30 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:51</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
@@ -2235,29 +1983,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T05:46:14.000Z" data-ean="5712580613505">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-42.43%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613505')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/1d94b5999ae0da5d8ade1b1d55e8ffad" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Minced Pork Veal</div>
-                        <div class="title">GRIS/KALV 4-7% SLAGTEREN</div>
-                        <div class="price-box">
-                            <span class="new-price">23 kr.</span>
-                            <span class="old-price">39.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 16.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:46</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-22T07:08:24.000Z" data-ean="5712580605197">
                     <div class="img-container">
                         
@@ -2281,6 +2006,236 @@
                     </div>
                 </div>
                 
+                <div class="product-card" data-start="2026-02-24T19:30:19.000Z" data-ean="5712580613321">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-66.6%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613321')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/b3f02680-2166-42ba-971c-b08179c1b1d9" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Light Dark Buns</div>
+                        <div class="title">SOLSKINSBOLLER KOHBERG</div>
+                        <div class="price-box">
+                            <span class="new-price">8 kr.</span>
+                            <span class="old-price">23.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 15.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:30</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T19:26:05.000Z" data-ean="5712580613253">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-58.78%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613253')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/72eb6c2f-4add-4b50-98b9-b980feea2360" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Sun Flower Seeded Rye Breads</div>
+                        <div class="title">SOLSIKKERUGBRØD KOHBERG</div>
+                        <div class="price-box">
+                            <span class="new-price">7 kr.</span>
+                            <span class="old-price">16.98 kr.</span>
+                        </div>
+                        <div class="savings">Save 9.98 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:26</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T05:15:36.000Z" data-ean="5712580613420">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-46.05%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613420')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/263045cd-0e3b-4b44-b0fc-b400a327e689" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Creme Fraiche Quark</div>
+                        <div class="title">CREME FRAICHE KAROLINE'S</div>
+                        <div class="price-box">
+                            <span class="new-price">14 kr.</span>
+                            <span class="old-price">25.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 11.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:15</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T13:51:01.000Z" data-ean="5712580613130">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-70.73%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613130')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/08b25b168e0691d6a0f8c4d94bf4fa3c" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pita Bread</div>
+                        <div class="title">BFREE PITTA</div>
+                        <div class="price-box">
+                            <span class="new-price">9 kr.</span>
+                            <span class="old-price">30.75 kr.</span>
+                        </div>
+                        <div class="savings">Save 21.75 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 13:51</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-05 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T05:14:12.000Z" data-ean="5712580613352">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-43.57%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613352')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f70287473e20a003b8feb10539354275" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Liver Paste Patee</div>
+                        <div class="title">FRANSK POSTEJ STRYHNS</div>
+                        <div class="price-box">
+                            <span class="new-price">9 kr.</span>
+                            <span class="old-price">15.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 6.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:14</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T05:51:39.000Z" data-ean="5712580613697">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-51.37%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613697')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/9bcafe031d0cd69816d83ab125c5548a" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Thick Sausages</div>
+                        <div class="title">ØKO MEDISTER SALLING ØKO</div>
+                        <div class="price-box">
+                            <span class="new-price">23 kr.</span>
+                            <span class="old-price">47.3 kr.</span>
+                        </div>
+                        <div class="savings">Save 24.30 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:51</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T10:57:53.000Z" data-ean="5712580613895">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-24.24%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613895')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/3c59de027aedd87be4dcf1923b9073cb" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Minced Pork Veal</div>
+                        <div class="title">HK GRIS&KALV SLAGTEREN</div>
+                        <div class="price-box">
+                            <span class="new-price">75 kr.</span>
+                            <span class="old-price">99 kr.</span>
+                        </div>
+                        <div class="savings">Save 24.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 10:57</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-23T13:05:31.000Z" data-ean="5712580608501">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-47.83%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580608501')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/857507db50255d9d8756967b5a3a3baf" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Toast Breads</div>
+                        <div class="title">SURDEJ CAFÉ SAN KOHBERG</div>
+                        <div class="price-box">
+                            <span class="new-price">12 kr.</span>
+                            <span class="old-price">23 kr.</span>
+                        </div>
+                        <div class="savings">Save 11.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 13:05</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-19T10:11:34.000Z" data-ean="5712580600796">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-33.24%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580600796')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/4c65cc99403fd7f14045d46a81a8fa42" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Meat Sausage</div>
+                        <div class="title">GROV LEV. PØLSE HØJER</div>
+                        <div class="price-box">
+                            <span class="new-price">24 kr.</span>
+                            <span class="old-price">35.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 11.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-19 10:11</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-21T10:57:46.000Z" data-ean="5712580604466">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-32.43%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580604466')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/3aaef80fd8677c974ab7bfa076e2eb57" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pork Sausages</div>
+                        <div class="title">HOTDOG PØLSER SALLING</div>
+                        <div class="price-box">
+                            <span class="new-price">25 kr.</span>
+                            <span class="old-price">37 kr.</span>
+                        </div>
+                        <div class="savings">Save 12.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-21 10:57</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
                 <div class="product-card" data-start="2026-02-23T09:41:20.000Z" data-ean="5712580607313">
                     <div class="img-container">
                         
@@ -2298,9 +2253,101 @@
                         <div class="savings">Save 36.00 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>50 each</strong></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>49 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 09:41</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-06 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T05:46:24.000Z" data-ean="5712580613512">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-29.91%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613512')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/2b5261a76165e5075d063a5278e13ca1" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Minced Pork</div>
+                        <div class="title">HK GRIS 4-7% SLAGTEREN</div>
+                        <div class="price-box">
+                            <span class="new-price">28 kr.</span>
+                            <span class="old-price">39.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 11.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:46</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T19:27:11.000Z" data-ean="5712580613260">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-21.44%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580613260')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f8a95b522b45b7ce7178df50d2bfe942" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Seeded Rye Breads</div>
+                        <div class="title">KERNERIGT RUGBRØD SALLING</div>
+                        <div class="price-box">
+                            <span class="new-price">7 kr.</span>
+                            <span class="old-price">8.91 kr.</span>
+                        </div>
+                        <div class="savings">Save 1.91 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 19:27</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-22T07:28:33.000Z" data-ean="5712580605340">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-29.41%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580605340')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/d4c5e6f6-d6f7-4473-87e1-5b286c6d41a7" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Mozarella</div>
+                        <div class="title">ØKO RYGEOST LØGISMOSE</div>
+                        <div class="price-box">
+                            <span class="new-price">18 kr.</span>
+                            <span class="old-price">25.5 kr.</span>
+                        </div>
+                        <div class="savings">Save 7.50 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-22 07:28</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-02 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-23T13:03:07.000Z" data-ean="5712580608488">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-63.14%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580608488')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/e26eb9a4-98f9-4f63-9699-c51ef6cfd353" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Seeded Rye Breads</div>
+                        <div class="title">VIKING I SKIVER KOHBERG</div>
+                        <div class="price-box">
+                            <span class="new-price">7 kr.</span>
+                            <span class="old-price">18.99 kr.</span>
+                        </div>
+                        <div class="savings">Save 11.99 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>13 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 13:03</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 </div></div></div><div class="brand-section" id="brand-netto"><div class="brand-header netto">netto</div><div class="store-container" data-store="Netto Grundtvigs Plads">
@@ -2310,75 +2357,6 @@
                 </div>
                 <div class="product-grid">
             
-                <div class="product-card" data-start="2026-02-25T05:23:00.000Z" data-ean="5712580214511">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-76.48%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214511')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/bf980eec82f16053e79600a93b3cb2e5" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Remoulade Mayonnaise</div>
-                        <div class="title">GROV REMOULADE SALATMESTEREN</div>
-                        <div class="price-box">
-                            <span class="new-price">4 kr.</span>
-                            <span class="old-price">17.01 kr.</span>
-                        </div>
-                        <div class="savings">Save 13.01 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:23</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T06:40:11.000Z" data-ean="5712580213231">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-47.8%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580213231')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/60d42573-cd6f-451f-9689-1a379726292e" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Sandwiches Wraps</div>
-                        <div class="title">WRAP M/KYLLING/KARRY NÆMT</div>
-                        <div class="price-box">
-                            <span class="new-price">12 kr.</span>
-                            <span class="old-price">22.99 kr.</span>
-                        </div>
-                        <div class="savings">Save 10.99 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 06:40</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T05:39:51.000Z" data-ean="5712580214641">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-60.21%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214641')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Dinner Meals</div>
-                        <div class="title">BURRITO NÆMT</div>
-                        <div class="price-box">
-                            <span class="new-price">12 kr.</span>
-                            <span class="old-price">30.16 kr.</span>
-                        </div>
-                        <div class="savings">Save 18.16 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>7 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:39</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-25T05:19:07.000Z" data-ean="5712580214450">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -2580,7 +2558,7 @@
                         <div class="savings">Save 16.95 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:19</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
                     </div>
@@ -2655,11 +2633,11 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T05:26:41.000Z" data-ean="5712580214566">
+                <div class="product-card" data-start="2026-02-25T05:26:28.000Z" data-ean="5712580214559">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
                         <div class="discount-badge">-77.72%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214566')">🤍</button>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214559')">🤍</button>
                         <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/1677dbea8ef2302fe3ac6bb7b2d12300" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
                     </div>
                     <div class="info">
@@ -2672,7 +2650,7 @@
                         <div class="savings">Save 13.95 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>6 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:26</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
                     </div>
@@ -2695,7 +2673,7 @@
                         <div class="savings">Save 10.29 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:24</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
@@ -2816,6 +2794,29 @@
                     </div>
                 </div>
                 
+                <div class="product-card" data-start="2026-02-25T05:23:00.000Z" data-ean="5712580214511">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-76.48%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214511')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/bf980eec82f16053e79600a93b3cb2e5" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Remoulade Mayonnaise</div>
+                        <div class="title">GROV REMOULADE SALATMESTEREN</div>
+                        <div class="price-box">
+                            <span class="new-price">4 kr.</span>
+                            <span class="old-price">17.01 kr.</span>
+                        </div>
+                        <div class="savings">Save 13.01 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:23</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
                 <div class="product-card" data-start="2026-02-25T05:36:06.000Z" data-ean="5712580214634">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -2839,26 +2840,26 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T05:44:55.000Z" data-ean="5712580214702">
+                <div class="product-card" data-start="2026-02-25T05:39:51.000Z" data-ean="5712580214641">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-35.36%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214702')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/ff89bd62d2982bf14f02153beb32fddd" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                        <div class="discount-badge">-60.21%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214641')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
                     </div>
                     <div class="info">
-                        <div class="category">Sandwiches Wraps</div>
-                        <div class="title">KEBAB'ISH SANDW NATURLI'</div>
+                        <div class="category">Dinner Meals</div>
+                        <div class="title">BURRITO NÆMT</div>
                         <div class="price-box">
-                            <span class="new-price">13 kr.</span>
-                            <span class="old-price">20.11 kr.</span>
+                            <span class="new-price">12 kr.</span>
+                            <span class="old-price">30.16 kr.</span>
                         </div>
-                        <div class="savings">Save 7.11 kr.</div>
+                        <div class="savings">Save 18.16 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:44</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>7 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:39</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 
@@ -3069,29 +3070,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T06:28:11.000Z" data-ean="5712580215082">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-42.2%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215082')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/695cd25f4ef04a794a7410a5554c8242" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Other Rye Breads</div>
-                        <div class="title">FANØ BRØD SIGNATURBRØD</div>
-                        <div class="price-box">
-                            <span class="new-price">15 kr.</span>
-                            <span class="old-price">25.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 10.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:28</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-25T06:28:57.000Z" data-ean="5712580215099">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -3138,29 +3116,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T06:31:25.000Z" data-ean="5712580215112">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-37.42%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215112')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/a62ec22154da770a7412c5889a3ce8ed" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Light Dark Buns</div>
-                        <div class="title">GULERODSBOLLER GAMLE MØLLE</div>
-                        <div class="price-box">
-                            <span class="new-price">10 kr.</span>
-                            <span class="old-price">15.98 kr.</span>
-                        </div>
-                        <div class="savings">Save 5.98 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:31</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-25T06:32:42.000Z" data-ean="5712580215136">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -3180,52 +3135,6 @@
                     <div class="meta-info">
                         <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:32</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T06:33:38.000Z" data-ean="5712580215143">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-29.41%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215143')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/4d519e70204070dfac0434ce3f6e6caa" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Light Dark Buns</div>
-                        <div class="title">KRYDDERBOLLER GAMLE MØLLE</div>
-                        <div class="price-box">
-                            <span class="new-price">6 kr.</span>
-                            <span class="old-price">8.5 kr.</span>
-                        </div>
-                        <div class="savings">Save 2.50 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:33</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T06:36:24.000Z" data-ean="5712580215174">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-47.34%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215174')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f62b180c6233648238ca19dee6295092" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Toast Breads</div>
-                        <div class="title">SURDEJSBOL ØKO ØGO</div>
-                        <div class="price-box">
-                            <span class="new-price">10 kr.</span>
-                            <span class="old-price">18.99 kr.</span>
-                        </div>
-                        <div class="savings">Save 8.99 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:36</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
                     </div>
                 </div>
@@ -3362,32 +3271,9 @@
                         <div class="savings">Save 8.14 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>8 each</strong></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 07:13</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T07:15:55.000Z" data-ean="5712580215488">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-47.49%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215488')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/91e9dd6625de5b297d8d48230d570fe1" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Liver Paste Patee</div>
-                        <div class="title">BACON LEVERPOSTEJ BORNHOLMERSLAGTEREN</div>
-                        <div class="price-box">
-                            <span class="new-price">9 kr.</span>
-                            <span class="old-price">17.14 kr.</span>
-                        </div>
-                        <div class="savings">Save 8.14 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>10 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 07:15</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-28 22:59</span></div>
                     </div>
                 </div>
                 
@@ -3434,52 +3320,6 @@
                         <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 07:20</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-28 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T05:15:42.000Z" data-ean="5712580212517">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-33.11%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580212517')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Cottage Cheese</div>
-                        <div class="title">HYTTEOST ØGO</div>
-                        <div class="price-box">
-                            <span class="new-price">10 kr.</span>
-                            <span class="old-price">14.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 4.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 05:15</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-03 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T06:27:11.000Z" data-ean="5712580215075">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-46.06%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215075')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/e25f5c0a015fa2c6c9791015d2b4d321" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Other Rye Breads</div>
-                        <div class="title">LINGON GROVA PÅGEN</div>
-                        <div class="price-box">
-                            <span class="new-price">13 kr.</span>
-                            <span class="old-price">24.1 kr.</span>
-                        </div>
-                        <div class="savings">Save 11.10 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:27</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
                     </div>
                 </div>
                 
@@ -3552,29 +3392,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T05:59:51.000Z" data-ean="5712580214849">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-20%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214849')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/46d0b3e186c609c1a1009f747cbb7ea4" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Minced Pork</div>
-                        <div class="title">HK. GRIS 8-12% VELSMAG</div>
-                        <div class="price-box">
-                            <span class="new-price">16 kr.</span>
-                            <span class="old-price">20 kr.</span>
-                        </div>
-                        <div class="savings">Save 4.00 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>7 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:59</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-25T05:35:49.000Z" data-ean="5712580214627">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -3595,52 +3412,6 @@
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:35</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T05:32:14.000Z" data-ean="5712580214610">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-22.93%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214610')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/d7ed6751421254c9c4f9bce1373a1f7b" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Whipping Cream</div>
-                        <div class="title">PISKEFLØDE 36% EGELYKKE</div>
-                        <div class="price-box">
-                            <span class="new-price">20 kr.</span>
-                            <span class="old-price">25.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 5.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>16 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:32</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T06:27:19.000Z" data-ean="5712580213088">
-                    <div class="img-container">
-                        
-                        <div class="discount-badge">-75.25%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580213088')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/d0151ff3198d24e2a5791733df1a109b" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">General</div>
-                        <div class="title">PÆRE/BANAN YOGH LØGISMOSE</div>
-                        <div class="price-box">
-                            <span class="new-price">3 kr.</span>
-                            <span class="old-price">12.12 kr.</span>
-                        </div>
-                        <div class="savings">Save 9.12 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 06:27</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
                     </div>
                 </div>
                 
@@ -3667,52 +3438,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T07:25:30.000Z" data-ean="5712580215525">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-20%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215525')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">General</div>
-                        <div class="title">GROVPOSTEJ STRYHNS</div>
-                        <div class="price-box">
-                            <span class="new-price">4 kr.</span>
-                            <span class="old-price">5 kr.</span>
-                        </div>
-                        <div class="savings">Save 1.00 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>31 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 07:25</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-01 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-25T05:30:36.000Z" data-ean="5712580214603">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-26.42%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214603')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/6b6972aa8ac2fc556d30b71ec5abcf34" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Whipping Cream</div>
-                        <div class="title">PISKEFLØDE 36% ARLA</div>
-                        <div class="price-box">
-                            <span class="new-price">11 kr.</span>
-                            <span class="old-price">14.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 3.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:30</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-25T05:27:40.000Z" data-ean="5712580214573">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -3735,23 +3460,178 @@
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-01 22:59</span></div>
                     </div>
                 </div>
-                </div></div><div class="store-container" data-store="Netto Sønderborg">
-                <div class="store-location">
-                    <span>📍 Netto Sønderborg</span>
-                    <span class="traffic-badge" data-flow="[]">Loading traffic...</span>
-                </div>
-                <div class="product-grid">
-            
-                <div class="product-card" data-start="2026-02-23T15:47:15.000Z" data-ean="5712580481760">
+                
+                <div class="product-card" data-start="2026-02-24T05:15:42.000Z" data-ean="5712580212517">
                     <div class="img-container">
                         
-                        <div class="discount-badge">-20%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580481760')">🤍</button>
-                        <img src="https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                        <div class="discount-badge">-33.11%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580212517')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
                     </div>
                     <div class="info">
-                        <div class="category">Thick Sausages</div>
-                        <div class="title">MEDISTER VELSMAG</div>
+                        <div class="category">Cottage Cheese</div>
+                        <div class="title">HYTTEOST ØGO</div>
+                        <div class="price-box">
+                            <span class="new-price">10 kr.</span>
+                            <span class="old-price">14.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 4.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 05:15</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-03 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T07:15:55.000Z" data-ean="5712580215488">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-47.49%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215488')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/91e9dd6625de5b297d8d48230d570fe1" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Liver Paste Patee</div>
+                        <div class="title">BACON LEVERPOSTEJ BORNHOLMERSLAGTEREN</div>
+                        <div class="price-box">
+                            <span class="new-price">9 kr.</span>
+                            <span class="old-price">17.14 kr.</span>
+                        </div>
+                        <div class="savings">Save 8.14 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>9 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 07:15</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-28 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T06:27:19.000Z" data-ean="5712580213088">
+                    <div class="img-container">
+                        
+                        <div class="discount-badge">-75.25%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580213088')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/d0151ff3198d24e2a5791733df1a109b" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">General</div>
+                        <div class="title">PÆRE/BANAN YOGH LØGISMOSE</div>
+                        <div class="price-box">
+                            <span class="new-price">3 kr.</span>
+                            <span class="old-price">12.12 kr.</span>
+                        </div>
+                        <div class="savings">Save 9.12 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 06:27</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T06:27:11.000Z" data-ean="5712580215075">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-46.06%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215075')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/e25f5c0a015fa2c6c9791015d2b4d321" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Other Rye Breads</div>
+                        <div class="title">LINGON GROVA PÅGEN</div>
+                        <div class="price-box">
+                            <span class="new-price">13 kr.</span>
+                            <span class="old-price">24.1 kr.</span>
+                        </div>
+                        <div class="savings">Save 11.10 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:27</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T05:44:55.000Z" data-ean="5712580214702">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-35.36%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214702')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/ff89bd62d2982bf14f02153beb32fddd" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Sandwiches Wraps</div>
+                        <div class="title">KEBAB'ISH SANDW NATURLI'</div>
+                        <div class="price-box">
+                            <span class="new-price">13 kr.</span>
+                            <span class="old-price">20.11 kr.</span>
+                        </div>
+                        <div class="savings">Save 7.11 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:44</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T07:25:30.000Z" data-ean="5712580215525">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-20%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215525')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">General</div>
+                        <div class="title">GROVPOSTEJ STRYHNS</div>
+                        <div class="price-box">
+                            <span class="new-price">4 kr.</span>
+                            <span class="old-price">5 kr.</span>
+                        </div>
+                        <div class="savings">Save 1.00 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>27 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 07:25</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-03-01 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T06:31:25.000Z" data-ean="5712580215112">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-37.42%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215112')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/a62ec22154da770a7412c5889a3ce8ed" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Light Dark Buns</div>
+                        <div class="title">GULERODSBOLLER GAMLE MØLLE</div>
+                        <div class="price-box">
+                            <span class="new-price">10 kr.</span>
+                            <span class="old-price">15.98 kr.</span>
+                        </div>
+                        <div class="savings">Save 5.98 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:31</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T05:59:51.000Z" data-ean="5712580214849">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-20%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214849')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/46d0b3e186c609c1a1009f747cbb7ea4" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Minced Pork</div>
+                        <div class="title">HK. GRIS 8-12% VELSMAG</div>
                         <div class="price-box">
                             <span class="new-price">16 kr.</span>
                             <span class="old-price">20 kr.</span>
@@ -3759,12 +3639,64 @@
                         <div class="savings">Save 4.00 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>6 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-23 15:47</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>5 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:59</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 
+                <div class="product-card" data-start="2026-02-25T06:28:11.000Z" data-ean="5712580215082">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-42.2%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580215082')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/695cd25f4ef04a794a7410a5554c8242" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Other Rye Breads</div>
+                        <div class="title">FANØ BRØD SIGNATURBRØD</div>
+                        <div class="price-box">
+                            <span class="new-price">15 kr.</span>
+                            <span class="old-price">25.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 10.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:28</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-25T05:32:14.000Z" data-ean="5712580214610">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-22.93%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580214610')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/d7ed6751421254c9c4f9bce1373a1f7b" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Whipping Cream</div>
+                        <div class="title">PISKEFLØDE 36% EGELYKKE</div>
+                        <div class="price-box">
+                            <span class="new-price">20 kr.</span>
+                            <span class="old-price">25.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 5.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>11 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 05:32</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-27 22:59</span></div>
+                    </div>
+                </div>
+                </div></div><div class="store-container" data-store="Netto Sønderborg">
+                <div class="store-location">
+                    <span>📍 Netto Sønderborg</span>
+                    <span class="traffic-badge" data-flow="[]">Loading traffic...</span>
+                </div>
+                <div class="product-grid">
+            
                 <div class="product-card" data-start="2026-02-23T12:15:50.000Z" data-ean="5712580481005">
                     <div class="img-container">
                         
@@ -3949,29 +3881,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-24T15:41:44.000Z" data-ean="5712580482774">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-30%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482774')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/78b7c1e5e39c612e14b224393a2c68d2" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Sandwiches Wraps</div>
-                        <div class="title">WRAP M/FALAFEL NÆMT</div>
-                        <div class="price-box">
-                            <span class="new-price">16.09 kr.</span>
-                            <span class="old-price">22.99 kr.</span>
-                        </div>
-                        <div class="savings">Save 6.90 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:41</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-24T15:47:20.000Z" data-ean="5712580482804">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -3992,29 +3901,6 @@
                         <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
                         <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:47</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-25 22:59</span></div>
-                    </div>
-                </div>
-                
-                <div class="product-card" data-start="2026-02-24T15:49:53.000Z" data-ean="5712580482859">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-32.48%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482859')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/b88b652e8f446877c710e36d23717664" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Pork Chops Pork Schnitzels</div>
-                        <div class="title">FLÆSK I SKIVER VELSMAG</div>
-                        <div class="price-box">
-                            <span class="new-price">29 kr.</span>
-                            <span class="old-price">42.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 13.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:49</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
                 
@@ -4133,29 +4019,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-24T15:39:31.000Z" data-ean="5712580482729">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-40.32%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482729')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/image" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Dinner Meals</div>
-                        <div class="title">BURRITO NÆMT</div>
-                        <div class="price-box">
-                            <span class="new-price">18 kr.</span>
-                            <span class="old-price">30.16 kr.</span>
-                        </div>
-                        <div class="savings">Save 12.16 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:39</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-24T06:18:29.000Z" data-ean="5712580481920">
                     <div class="img-container">
                         
@@ -4271,11 +4134,11 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-25T06:01:42.000Z" data-ean="5712580483160">
+                <div class="product-card" data-start="2026-02-24T15:45:50.000Z" data-ean="5712580482798">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
                         <div class="discount-badge">-20%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580483160')">🤍</button>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482798')">🤍</button>
                         <img src="https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
                     </div>
                     <div class="info">
@@ -4288,8 +4151,8 @@
                         <div class="savings">Save 4.00 kr.</div>
                     </div>
                     <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>7 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-25 06:01</span></div>
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 1 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:45</span></div>
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
@@ -4363,29 +4226,6 @@
                     </div>
                 </div>
                 
-                <div class="product-card" data-start="2026-02-24T15:53:50.000Z" data-ean="5712580482903">
-                    <div class="img-container">
-                        <div class="new-badge">✨ NEW</div>
-                        <div class="discount-badge">-39.92%</div>
-                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482903')">🤍</button>
-                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f2698835f82937e07a20dc3bdc9b2bf5" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
-                    </div>
-                    <div class="info">
-                        <div class="category">Minced Pork Veal</div>
-                        <div class="title">HK. GRIS/KALV 4-7% VELSMAG</div>
-                        <div class="price-box">
-                            <span class="new-price">24 kr.</span>
-                            <span class="old-price">39.95 kr.</span>
-                        </div>
-                        <div class="savings">Save 15.95 kr.</div>
-                    </div>
-                    <div class="meta-info">
-                        <div class="meta-row"><span>📦 Stock:</span> <strong>4 each</strong></div>
-                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:53</span></div>
-                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
-                    </div>
-                </div>
-                
                 <div class="product-card" data-start="2026-02-24T15:24:41.000Z" data-ean="5712580482576">
                     <div class="img-container">
                         <div class="new-badge">✨ NEW</div>
@@ -4431,69 +4271,189 @@
                         <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
                     </div>
                 </div>
+                
+                <div class="product-card" data-start="2026-02-24T15:49:53.000Z" data-ean="5712580482859">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-32.48%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482859')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/b88b652e8f446877c710e36d23717664" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Pork Chops Pork Schnitzels</div>
+                        <div class="title">FLÆSK I SKIVER VELSMAG</div>
+                        <div class="price-box">
+                            <span class="new-price">29 kr.</span>
+                            <span class="old-price">42.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 13.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <span class="low-stock">🔥 Only 2 each left!</span></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:49</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T15:53:50.000Z" data-ean="5712580482903">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-39.92%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482903')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/f2698835f82937e07a20dc3bdc9b2bf5" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Minced Pork Veal</div>
+                        <div class="title">HK. GRIS/KALV 4-7% VELSMAG</div>
+                        <div class="price-box">
+                            <span class="new-price">24 kr.</span>
+                            <span class="old-price">39.95 kr.</span>
+                        </div>
+                        <div class="savings">Save 15.95 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:53</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
+                
+                <div class="product-card" data-start="2026-02-24T15:41:44.000Z" data-ean="5712580482774">
+                    <div class="img-container">
+                        <div class="new-badge">✨ NEW</div>
+                        <div class="discount-badge">-30%</div>
+                        <button class="fav-btn" onclick="toggleFavorite(event, '5712580482774')">🤍</button>
+                        <img src="https://digitalassets.sallinggroup.com/image/upload/e_trim/c_limit,e_sharpen:80,f_auto,q_auto,w_400,h_400/78b7c1e5e39c612e14b224393a2c68d2" class="product-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x300/252525/e0e0e0?text=No+Image+Available&font=roboto';">
+                    </div>
+                    <div class="info">
+                        <div class="category">Sandwiches Wraps</div>
+                        <div class="title">WRAP M/FALAFEL NÆMT</div>
+                        <div class="price-box">
+                            <span class="new-price">16.09 kr.</span>
+                            <span class="old-price">22.99 kr.</span>
+                        </div>
+                        <div class="savings">Save 6.90 kr.</div>
+                    </div>
+                    <div class="meta-info">
+                        <div class="meta-row"><span>📦 Stock:</span> <strong>3 each</strong></div>
+                        <div class="meta-row"><span>🕒 Start:</span> <span>2026-02-24 15:41</span></div>
+                        <div class="meta-row expire-alert"><span>⏳ Exp:</span> <span>2026-02-26 22:59</span></div>
+                    </div>
+                </div>
                 </div></div></div>
-        </div> <!-- End main-content -->
-        
-        <div class="site-footer">
-            🟢 Live data last updated: <span>25-02-2026 at 11:52</span>
-        </div>
+        </div> 
+        <div class="site-footer">🟢 Live data last updated: <span>25-02-2026 at 13:23</span></div>
         
         <script>
-            // --- FAVORITES LOGIC ---
-            function getFavorites() {
-                return JSON.parse(localStorage.getItem('foodRescueFavs') || '[]');
+            let userFavorites = [];
+
+            // Listen for Firebase to initialize before setting up auth checks
+            window.addEventListener('firebase-ready', () => {
+                window.auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        document.getElementById("loginBtn").innerText = "Logout";
+                        document.getElementById("loginBtn").onclick = handleLogout;
+                        
+                        // Fetch favorites from Cloud Database
+                        try {
+                            const docRef = window.doc(window.db, "users", user.uid);
+                            const docSnap = await window.getDoc(docRef);
+                            if (docSnap.exists()) {
+                                userFavorites = docSnap.data().favorites || [];
+                            } else {
+                                userFavorites = [];
+                            }
+                        } catch(e) { console.log("Db Error:", e); }
+                        
+                    } else {
+                        document.getElementById("loginBtn").innerText = "Login / Register";
+                        document.getElementById("loginBtn").onclick = handleLoginFlow;
+                        userFavorites = [];
+                    }
+                    refreshFavoriteUI();
+                });
+            });
+
+            async function handleLoginFlow() {
+                let email = prompt("Enter your email:");
+                if (!email) return;
+                let password = prompt("Enter your password (min 6 characters):");
+                if (!password) return;
+
+                try {
+                    // Try to log in
+                    await window.signInWithEmailAndPassword(window.auth, email, password);
+                    alert("Welcome back!");
+                } catch (error) {
+                    // If account doesn't exist, ask to register
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                        if(confirm("Account not found. Do you want to create a new account with this email?")) {
+                            try {
+                                await window.createUserWithEmailAndPassword(window.auth, email, password);
+                                alert("Account successfully created!");
+                            } catch(err) {
+                                alert("Registration error: " + err.message);
+                            }
+                        }
+                    } else {
+                        alert("Login Error: " + error.message);
+                    }
+                }
             }
 
-            function toggleFavorite(event, ean) {
-                // Prevent clicking the heart from doing anything else
+            async function handleLogout() {
+                await window.signOut(window.auth);
+                alert("You have been logged out.");
+                filterItems(); // Reset the screen if "Show Favorites" was active
+            }
+
+            async function toggleFavorite(event, ean) {
                 event.preventDefault(); 
                 
-                let favs = getFavorites();
-                let btn = event.currentTarget;
+                if (!window.auth || !window.auth.currentUser) {
+                    alert("Please click 'Login / Register' to save favorites to the cloud!");
+                    return;
+                }
                 
-                if (favs.includes(ean)) {
-                    // Remove from favorites
-                    favs = favs.filter(id => id !== ean);
+                let btn = event.currentTarget;
+                if (userFavorites.includes(ean)) {
+                    userFavorites = userFavorites.filter(id => id !== ean);
                     btn.innerText = "🤍";
                 } else {
-                    // Add to favorites
-                    favs.push(ean);
+                    userFavorites.push(ean);
                     btn.innerText = "❤️";
                 }
                 
-                localStorage.setItem('foodRescueFavs', JSON.stringify(favs));
-                
-                // If the filter is currently active, instantly hide the card we just un-favorited
-                if(document.getElementById("favFilter").checked) {
-                    filterItems();
+                // Save immediately to Firebase Cloud
+                try {
+                    const docRef = window.doc(window.db, "users", window.auth.currentUser.uid);
+                    await window.setDoc(docRef, { favorites: userFavorites });
+                } catch(e) {
+                    alert("Error saving to cloud: " + e.message);
                 }
+                
+                if(document.getElementById("favFilter").checked) filterItems();
             }
 
-            // Run when page loads to highlight saved hearts
-            document.addEventListener('DOMContentLoaded', () => {
-                let favs = getFavorites();
+            function refreshFavoriteUI() {
                 document.querySelectorAll('.product-card').forEach(card => {
                     let ean = card.getAttribute('data-ean');
-                    if(favs.includes(ean)) {
-                        card.querySelector('.fav-btn').innerText = "❤️";
-                    }
+                    let btn = card.querySelector('.fav-btn');
+                    if(userFavorites.includes(ean)) btn.innerText = "❤️";
+                    else btn.innerText = "🤍";
                 });
-                updateTraffic();
-            });
+            }
 
             // --- MENU & FILTERING LOGIC ---
             function toggleSidebar() {
-                let sidebar = document.getElementById("sidebar");
-                let overlay = document.getElementById("sidebar-overlay");
-                sidebar.classList.toggle("open");
-                overlay.classList.toggle("open");
+                document.getElementById("sidebar").classList.toggle("open");
+                document.getElementById("sidebar-overlay").classList.toggle("open");
             }
 
             function filterItems() {
                 let searchVal = document.getElementById("searchInput").value.toLowerCase();
                 let storeVal = document.getElementById("storeSelect").value;
                 let showFavs = document.getElementById("favFilter").checked;
-                let favs = getFavorites();
                 let storeGroups = document.querySelectorAll(".store-container");
                 
                 storeGroups.forEach(group => {
@@ -4505,10 +4465,8 @@
                     cards.forEach(card => {
                         let text = card.innerText.toLowerCase();
                         let ean = card.getAttribute('data-ean');
-                        
-                        // Check if it matches search, store, AND the favorite filter
                         let matchesSearch = text.includes(searchVal);
-                        let matchesFav = !showFavs || favs.includes(ean);
+                        let matchesFav = !showFavs || userFavorites.includes(ean);
                         
                         if (isStoreMatch && matchesSearch && matchesFav) {
                             card.style.display = "flex";
@@ -4523,56 +4481,44 @@
 
             function sortItems() {
                 let sortVal = document.getElementById("sortSelect").value;
-                let storeGroups = document.querySelectorAll(".store-container");
-
-                storeGroups.forEach(group => {
+                document.querySelectorAll(".store-container").forEach(group => {
                     let grid = group.querySelector(".product-grid");
                     let cards = Array.from(grid.querySelectorAll(".product-card"));
 
                     if (sortVal !== "default") {
                         cards.sort((a, b) => {
-                            let priceA = parseFloat(a.querySelector(".new-price").innerText.replace(" kr.", ""));
-                            let priceB = parseFloat(b.querySelector(".new-price").innerText.replace(" kr.", ""));
-                            let discountA = parseFloat(a.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
-                            let discountB = parseFloat(b.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
+                            let priceA = parseFloat(a.querySelector(".new-price").innerText);
+                            let priceB = parseFloat(b.querySelector(".new-price").innerText);
+                            let discA = parseFloat(a.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
+                            let discB = parseFloat(b.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
                             let dateA = new Date(a.getAttribute("data-start"));
                             let dateB = new Date(b.getAttribute("data-start"));
 
                             if (sortVal === "price-asc") return priceA - priceB;
-                            if (sortVal === "price-desc") return priceB - priceA;
-                            if (sortVal === "discount-desc") return discountB - discountA; 
+                            if (sortVal === "discount-desc") return discB - discA; 
                             if (sortVal === "date-new") return dateB - dateA; 
-                            if (sortVal === "date-old") return dateA - dateB; 
                             return 0;
                         });
                     }
                     cards.forEach(card => grid.appendChild(card));
                 });
-                
-                if(window.innerWidth <= 768) {
-                    toggleSidebar();
-                }
+                if(window.innerWidth <= 768) toggleSidebar();
             }
 
-            function updateTraffic() {
+            document.addEventListener('DOMContentLoaded', () => {
                 let currentHour = new Date().getHours();
-                let badges = document.querySelectorAll(".traffic-badge");
-                
-                badges.forEach(badge => {
+                document.querySelectorAll(".traffic-badge").forEach(badge => {
                     let flowStr = badge.getAttribute("data-flow");
                     if (flowStr && flowStr !== "[]") {
                         let flowData = JSON.parse(flowStr);
                         let flow = flowData[currentHour];
-                        
                         if (flow === 0) badge.innerHTML = "🌙 Closed";
                         else if (flow < 0.20) badge.innerHTML = "🟢 Quiet right now";
                         else if (flow < 0.40) badge.innerHTML = "🟡 Steady traffic";
                         else badge.innerHTML = "🔴 Busy right now";
-                    } else {
-                        badge.innerHTML = "⚪ No traffic data";
-                    }
+                    } else badge.innerHTML = "⚪ No traffic data";
                 });
-            }
+            });
         </script>
     </body></html>
     
