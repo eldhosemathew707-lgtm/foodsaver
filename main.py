@@ -51,7 +51,6 @@ def generate_html(data):
 
         <!-- FIREBASE SDK INJECTION -->
         <script type="module">
-            // NEW: Added sendPasswordResetEmail to the imports
             import {{ initializeApp }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
             import {{ getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
             import {{ getFirestore, doc, setDoc, getDoc }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -72,7 +71,7 @@ def generate_html(data):
             window.signInWithEmailAndPassword = signInWithEmailAndPassword;
             window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
             window.signOut = signOut;
-            window.sendPasswordResetEmail = sendPasswordResetEmail; // Added to window
+            window.sendPasswordResetEmail = sendPasswordResetEmail; 
             window.doc = doc;
             window.setDoc = setDoc;
             window.getDoc = getDoc;
@@ -103,7 +102,6 @@ def generate_html(data):
             .modal-content input {{ width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; box-sizing: border-box; font-family: 'Inter', sans-serif; }}
             .modal-content input:focus {{ border-color: #3498db; outline: none; }}
             
-            /* NEW: Forgot password link styling */
             .forgot-password {{ text-align: right; margin-top: -10px; margin-bottom: 15px; font-size: 0.85em; color: #3498db; cursor: pointer; transition: 0.2s; }}
             .forgot-password:hover {{ text-decoration: underline; color: #2980b9; }}
 
@@ -176,7 +174,6 @@ def generate_html(data):
                 <input type="email" id="emailInput" placeholder="Email address" required>
                 <input type="password" id="passwordInput" placeholder="Password (min. 6 chars)" required>
                 
-                <!-- NEW: Forgot password button -->
                 <div class="forgot-password" onclick="handleForgotPassword()">Forgot password?</div>
                 
                 <button class="modal-btn" onclick="submitLogin()">Continue</button>
@@ -361,18 +358,21 @@ def generate_html(data):
                     await window.signInWithEmailAndPassword(window.auth, email, password);
                     closeLoginModal();
                 }} catch (error) {{
-                    // If account doesn't exist, ask to register natively in the modal
+                    // If it fails, try to create the account just in case it doesn't exist
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {{
-                        msgBox.style.color = "#f39c12"; // Yellow warning
-                        msgBox.innerText = "Account not found. Creating a new account...";
-                        msgBox.style.display = "block";
-                        
                         try {{
                             await window.createUserWithEmailAndPassword(window.auth, email, password);
                             closeLoginModal();
                         }} catch(err) {{
-                            msgBox.style.color = "#e74c3c"; // Red error
-                            msgBox.innerText = "Registration error: " + err.message;
+                            // THE FIX: Account exists, wrong password
+                            if (err.code === 'auth/email-already-in-use') {{
+                                msgBox.style.color = "#e74c3c";
+                                msgBox.innerText = "Incorrect password. Please try again or use 'Forgot password?'.";
+                            }} else {{
+                                msgBox.style.color = "#e74c3c";
+                                msgBox.innerText = "Error: " + err.message;
+                            }}
+                            msgBox.style.display = "block";
                         }}
                     }} else {{
                         msgBox.style.color = "#e74c3c"; 
@@ -382,7 +382,7 @@ def generate_html(data):
                 }}
             }}
 
-            // --- NEW: FORGOT PASSWORD LOGIC ---
+            // --- FORGOT PASSWORD LOGIC ---
             async function handleForgotPassword() {{
                 let email = document.getElementById("emailInput").value.trim();
                 let msgBox = document.getElementById("loginMessage");
