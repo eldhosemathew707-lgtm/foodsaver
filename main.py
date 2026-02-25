@@ -292,8 +292,30 @@ def generate_html(data):
                 except Exception: pass
                 new_badge_html = '<div class="new-badge">✨ NEW</div>' if is_new else ''
 
+                # Get the category text
                 cat_text = item['product'].get('categories', {}).get('en', 'General').split('>')[-1]
-                img_src = item['product'].get('image') or PLACEHOLDER_IMG
+                
+                # Check if the image exists
+                img_src = item['product'].get('image')
+                
+                # If image is null, create a smart placeholder based on the category!
+                if not img_src:
+                    cat_lower = cat_text.lower()
+                    if 'meat' in cat_lower or 'pork' in cat_lower or 'beef' in cat_lower or 'sausage' in cat_lower:
+                        emoji = "🥩"
+                    elif 'dairy' in cat_lower or 'cheese' in cat_lower or 'milk' in cat_lower:
+                        emoji = "🧀"
+                    elif 'bread' in cat_lower or 'cake' in cat_lower or 'bun' in cat_lower:
+                        emoji = "🥐"
+                    elif 'beverage' in cat_lower or 'juice' in cat_lower:
+                        emoji = "🧃"
+                    elif 'fruit' in cat_lower or 'vegetable' in cat_lower or 'salad' in cat_lower:
+                        emoji = "🥗"
+                    else:
+                        emoji = "🛒" # Default icon
+                    
+                    # Generate a clean, dark-themed image with just the giant emoji
+                    img_src = f"https://placehold.co/400x300/252525/555555?text={emoji}"
 
                 if stock_unit == 'kg': stock_display_val = f"{round(stock, 2)} kg"
                 else: stock_display_val = f"{int(stock)} {stock_unit}"
@@ -581,3 +603,4 @@ if data:
     generate_html(data)
 else:
     print("Failed to generate HTML: No data was found.")
+
