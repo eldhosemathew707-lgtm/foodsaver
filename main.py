@@ -21,7 +21,6 @@ def get_clearance_data():
     return []
 
 def generate_html(data):
-    # Get the current time (Adjusted to CET)
     update_time = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%d-%m-%Y at %H:%M")
 
     store_names = set()
@@ -49,27 +48,59 @@ def generate_html(data):
           gtag('js', new Date());
           gtag('config', 'G-6Y185D49HV');
         </script>
+
+        <!-- FIREBASE SDK INJECTION -->
+        <script type="module">
+            import {{ initializeApp }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+            import {{ getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+            import {{ getFirestore, doc, setDoc, getDoc }} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+            // TODO: PASTE YOUR FIREBASE CONFIG HERE:
+            const firebaseConfig = {{
+                apiKey: "AIzaSyBB6C2ipV6hRF7F_CEWQtb2ENx94CLuGKM",
+                authDomain: "food-rescueapp.firebaseapp.com",
+                projectId: "food-rescueapp",
+                storageBucket: "food-rescueapp.firebasestorage.app",
+                messagingSenderId: "201559525774",
+                appId: "1:201559525774:web:420f9fc505ae453a04bcdf"
+            }};
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            window.auth = getAuth(app);
+            window.db = getFirestore(app);
+            window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+            window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+            window.signOut = signOut;
+            window.doc = doc;
+            window.setDoc = setDoc;
+            window.getDoc = getDoc;
+            
+            // Fire an event when Firebase is fully loaded
+            window.dispatchEvent(new Event('firebase-ready'));
+        </script>
         
         <style>
             body {{ font-family: 'Inter', sans-serif; background-color: #121212; margin: 0; padding: 0; color: #e0e0e0; overflow-x: hidden; }}
             
             /* Header */
             .header-container {{ background: #1e1e1e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; transition: all 0.3s ease;}}
-            .header-top {{ display: block; }} 
-            h1 {{ text-align: center; margin: 0 0 15px 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}}
+            .header-top {{ display: flex; align-items: center; justify-content: space-between; }} 
+            h1 {{ margin: 0; font-size: 1.6em; color: #ffffff; font-weight: 800; letter-spacing: -0.5px;}}
             
-            /* Sidebar & Controls Container */
-            .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; align-items: center;}}
+            /* Buttons */
+            #loginBtn {{ background: #3498db; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }}
+            #loginBtn:hover {{ background: #2980b9; }}
+            #mobile-menu-btn {{ display: none; }}
+            
+            /* Controls */
+            .controls {{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; transition: 0.3s ease; align-items: center; margin-top: 15px; }}
             .controls input, .controls select {{ padding: 12px 16px; font-size: 0.95em; border: 1px solid #444; border-radius: 25px; width: 100%; max-width: 220px; outline: none; background: #2a2a2a; color: #fff; transition: all 0.2s;}}
-            .controls input:focus, .controls select:focus {{ border-color: #2ecc71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);}}
             
-            /* Favorites Toggle */
             .fav-filter-container {{ display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 12px 16px; border-radius: 25px; border: 1px solid #444; cursor: pointer; color: #fff; font-size: 0.95em; font-weight: 600; user-select: none; transition: 0.2s; }}
-            .fav-filter-container:hover {{ border-color: #e74c3c; }}
             .fav-filter-container input {{ width: auto; margin: 0; cursor: pointer; accent-color: #e74c3c; }}
 
             /* Mobile Toggle Buttons */
-            #mobile-menu-btn {{ display: none; }}
             .close-sidebar-btn {{ display: none; }}
             #sidebar-overlay {{ display: none; }}
 
@@ -83,19 +114,13 @@ def generate_html(data):
             .traffic-badge {{ font-size: 0.75em; font-weight: 600; padding: 6px 12px; border-radius: 20px; background: #2a2a2a; color: #aaa; border: 1px solid #444;}}
             .product-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }}
             .product-card {{ background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column; position: relative;}}
-            .product-card:hover {{ transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.5); border-color: #555;}}
             .img-container {{ width: 100%; height: 160px; background: #252525; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 15px; box-sizing: border-box; border-bottom: 1px solid #333;}}
-            .product-img {{ width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }}
-            .product-card:hover .product-img {{ transform: scale(1.08); }}
+            .product-img {{ width: 100%; height: 100%; object-fit: contain; }}
             
-            /* Badges */
             .discount-badge {{ position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
             .new-badge {{ position: absolute; top: 12px; left: 12px; background: #3498db; color: white; padding: 6px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 800; z-index: 10;}}
-            
-            /* Favorite Button */
             .fav-btn {{ position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; cursor: pointer; z-index: 10; transition: 0.2s; backdrop-filter: blur(4px); }}
-            .fav-btn:hover {{ transform: scale(1.1); background: rgba(0,0,0,0.8); }}
-
+            
             .info {{ padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }}
             .category {{ font-size: 0.7em; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 800;}}
             .title {{ font-weight: 600; font-size: 0.95em; margin-bottom: 12px; line-height: 1.4; color: #ffffff; flex-grow: 1; }}
@@ -109,18 +134,16 @@ def generate_html(data):
             .expire-alert {{ color: #ff6b6b; font-weight: 800; background: rgba(255, 107, 107, 0.1); padding: 3px 8px; border-radius: 6px;}}
             .low-stock {{ color: #f39c12; font-weight: 800; display: flex; align-items: center; gap: 4px; background: rgba(243, 156, 18, 0.1); padding: 2px 6px; border-radius: 4px;}}
             
-            /* Footer */
             .site-footer {{ text-align: center; padding: 25px; color: #888; font-size: 0.9em; border-top: 1px solid #333; background-color: #1a1a1a; margin-top: 20px; }}
             .site-footer span {{ color: #2ecc71; font-weight: 600; }}
 
-            /* --- ULTRA-THIN MOBILE HEADER FIX --- */
             @media (max-width: 768px) {{
                 .header-container {{ padding: 12px 15px; }}
-                .header-top {{ display: flex; align-items: center; justify-content: space-between; }}
-                h1 {{ margin: 0; font-size: 1.25em; text-align: left;}}
-                #mobile-menu-btn {{ display: inline-block; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 6px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; white-space: nowrap;}}
+                h1 {{ font-size: 1.25em; }}
+                #mobile-menu-btn {{ display: inline-block; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 8px; padding: 6px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; margin-left: 8px;}}
+                #loginBtn {{ padding: 6px 12px; font-size: 0.9em; }}
                 
-                .controls {{ position: fixed; top: 0; left: -300px; width: 260px; height: 100%; background: #1a1a1a; flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8); z-index: 1001; overflow-y: auto; }}
+                .controls {{ position: fixed; top: 0; left: -300px; width: 260px; height: 100%; background: #1a1a1a; flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 25px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.8); z-index: 1001; overflow-y: auto; margin-top: 0;}}
                 .controls.open {{ left: 0; }}
                 .controls input, .controls select {{ max-width: 100%; width: 100%; box-sizing: border-box; }}
                 .fav-filter-container {{ max-width: 100%; width: 100%; box-sizing: border-box; justify-content: flex-start; }}
@@ -137,7 +160,10 @@ def generate_html(data):
         <div class="header-container">
             <div class="header-top">
                 <h1>🛒 Food Rescue</h1>
-                <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters</button>
+                <div>
+                    <button id="loginBtn" onclick="handleLoginFlow()">Login / Register</button>
+                    <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Filters</button>
+                </div>
             </div>
             
             <div class="controls" id="sidebar">
@@ -149,13 +175,10 @@ def generate_html(data):
                 <select id="sortSelect" onchange="sortItems()">
                     <option value="default">Sort: Default</option>
                     <option value="date-new">Date: Newest First</option>
-                    <option value="date-old">Date: Oldest First</option>
                     <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
                     <option value="discount-desc">Discount: High to Low</option>
                 </select>
                 
-                <!-- NEW FAVORITES FILTER -->
                 <label class="fav-filter-container">
                     <input type="checkbox" id="favFilter" onchange="filterItems()"> 
                     <span>⭐ Favorites Only</span>
@@ -200,10 +223,9 @@ def generate_html(data):
                 percent = item['offer']['percentDiscount']
                 stock = item['offer']['stock']
                 stock_unit = item['offer']['stockUnit']
-                ean = item['offer'].get('ean', 'unknown') # Grab the unique ID for favorites
+                ean = item['offer'].get('ean', 'unknown')
                 
                 savings = round(old_price - new_price, 2)
-                
                 start_raw = item['offer']['startTime'] 
                 start = start_raw.replace('T', ' ')[:16]
                 expire = item['offer']['endTime'].replace('T', ' ')[:16]
@@ -213,33 +235,16 @@ def generate_html(data):
                     start_dt = datetime.strptime(start_raw[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
                     if datetime.now(timezone.utc) - start_dt <= timedelta(hours=24):
                         is_new = True
-                except Exception:
-                    pass
-
+                except Exception: pass
                 new_badge_html = '<div class="new-badge">✨ NEW</div>' if is_new else ''
 
-                categories = item['product'].get('categories', {})
-                if 'en' in categories:
-                    cat_text = categories['en'].split('>')[-1]
-                elif 'da' in categories:
-                    cat_text = categories['da'].split('>')[-1]
-                else:
-                    cat_text = "General"
-
+                cat_text = item['product'].get('categories', {}).get('en', 'General').split('>')[-1]
                 img_src = item['product'].get('image') or PLACEHOLDER_IMG
 
-                # Clean Up Decimal Weights
-                if stock_unit == 'kg':
-                    stock_display_val = f"{round(stock, 2)} kg"
-                else:
-                    stock_display_val = f"{int(stock)} {stock_unit}"
+                if stock_unit == 'kg': stock_display_val = f"{round(stock, 2)} kg"
+                else: stock_display_val = f"{int(stock)} {stock_unit}"
+                stock_display = f'<span class="low-stock">🔥 Only {stock_display_val} left!</span>' if float(stock) <= 2 else f'<strong>{stock_display_val}</strong>'
 
-                if float(stock) <= 2:
-                    stock_display = f'<span class="low-stock">🔥 Only {stock_display_val} left!</span>'
-                else:
-                    stock_display = f'<strong>{stock_display_val}</strong>'
-
-                # Notice the data-ean attribute and the new fav-btn inside the card
                 html_content += f"""
                 <div class="product-card" data-start="{start_raw}" data-ean="{ean}">
                     <div class="img-container">
@@ -268,68 +273,119 @@ def generate_html(data):
         html_content += '</div>'
         
     html_content += f"""
-        </div> <!-- End main-content -->
-        
-        <div class="site-footer">
-            🟢 Live data last updated: <span>{update_time}</span>
-        </div>
+        </div> 
+        <div class="site-footer">🟢 Live data last updated: <span>{update_time}</span></div>
         
         <script>
-            // --- FAVORITES LOGIC ---
-            function getFavorites() {{
-                return JSON.parse(localStorage.getItem('foodRescueFavs') || '[]');
+            let userFavorites = [];
+
+            // Listen for Firebase to initialize before setting up auth checks
+            window.addEventListener('firebase-ready', () => {{
+                window.auth.onAuthStateChanged(async (user) => {{
+                    if (user) {{
+                        document.getElementById("loginBtn").innerText = "Logout";
+                        document.getElementById("loginBtn").onclick = handleLogout;
+                        
+                        // Fetch favorites from Cloud Database
+                        try {{
+                            const docRef = window.doc(window.db, "users", user.uid);
+                            const docSnap = await window.getDoc(docRef);
+                            if (docSnap.exists()) {{
+                                userFavorites = docSnap.data().favorites || [];
+                            }} else {{
+                                userFavorites = [];
+                            }}
+                        }} catch(e) {{ console.log("Db Error:", e); }}
+                        
+                    }} else {{
+                        document.getElementById("loginBtn").innerText = "Login / Register";
+                        document.getElementById("loginBtn").onclick = handleLoginFlow;
+                        userFavorites = [];
+                    }}
+                    refreshFavoriteUI();
+                }});
+            }});
+
+            async function handleLoginFlow() {{
+                let email = prompt("Enter your email:");
+                if (!email) return;
+                let password = prompt("Enter your password (min 6 characters):");
+                if (!password) return;
+
+                try {{
+                    // Try to log in
+                    await window.signInWithEmailAndPassword(window.auth, email, password);
+                    alert("Welcome back!");
+                }} catch (error) {{
+                    // If account doesn't exist, ask to register
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {{
+                        if(confirm("Account not found. Do you want to create a new account with this email?")) {{
+                            try {{
+                                await window.createUserWithEmailAndPassword(window.auth, email, password);
+                                alert("Account successfully created!");
+                            }} catch(err) {{
+                                alert("Registration error: " + err.message);
+                            }}
+                        }}
+                    }} else {{
+                        alert("Login Error: " + error.message);
+                    }}
+                }}
             }}
 
-            function toggleFavorite(event, ean) {{
-                // Prevent clicking the heart from doing anything else
+            async function handleLogout() {{
+                await window.signOut(window.auth);
+                alert("You have been logged out.");
+                filterItems(); // Reset the screen if "Show Favorites" was active
+            }}
+
+            async function toggleFavorite(event, ean) {{
                 event.preventDefault(); 
                 
-                let favs = getFavorites();
-                let btn = event.currentTarget;
+                if (!window.auth || !window.auth.currentUser) {{
+                    alert("Please click 'Login / Register' to save favorites to the cloud!");
+                    return;
+                }}
                 
-                if (favs.includes(ean)) {{
-                    // Remove from favorites
-                    favs = favs.filter(id => id !== ean);
+                let btn = event.currentTarget;
+                if (userFavorites.includes(ean)) {{
+                    userFavorites = userFavorites.filter(id => id !== ean);
                     btn.innerText = "🤍";
                 }} else {{
-                    // Add to favorites
-                    favs.push(ean);
+                    userFavorites.push(ean);
                     btn.innerText = "❤️";
                 }}
                 
-                localStorage.setItem('foodRescueFavs', JSON.stringify(favs));
-                
-                // If the filter is currently active, instantly hide the card we just un-favorited
-                if(document.getElementById("favFilter").checked) {{
-                    filterItems();
+                // Save immediately to Firebase Cloud
+                try {{
+                    const docRef = window.doc(window.db, "users", window.auth.currentUser.uid);
+                    await window.setDoc(docRef, {{ favorites: userFavorites }});
+                }} catch(e) {{
+                    alert("Error saving to cloud: " + e.message);
                 }}
+                
+                if(document.getElementById("favFilter").checked) filterItems();
             }}
 
-            // Run when page loads to highlight saved hearts
-            document.addEventListener('DOMContentLoaded', () => {{
-                let favs = getFavorites();
+            function refreshFavoriteUI() {{
                 document.querySelectorAll('.product-card').forEach(card => {{
                     let ean = card.getAttribute('data-ean');
-                    if(favs.includes(ean)) {{
-                        card.querySelector('.fav-btn').innerText = "❤️";
-                    }}
+                    let btn = card.querySelector('.fav-btn');
+                    if(userFavorites.includes(ean)) btn.innerText = "❤️";
+                    else btn.innerText = "🤍";
                 }});
-                updateTraffic();
-            }});
+            }}
 
             // --- MENU & FILTERING LOGIC ---
             function toggleSidebar() {{
-                let sidebar = document.getElementById("sidebar");
-                let overlay = document.getElementById("sidebar-overlay");
-                sidebar.classList.toggle("open");
-                overlay.classList.toggle("open");
+                document.getElementById("sidebar").classList.toggle("open");
+                document.getElementById("sidebar-overlay").classList.toggle("open");
             }}
 
             function filterItems() {{
                 let searchVal = document.getElementById("searchInput").value.toLowerCase();
                 let storeVal = document.getElementById("storeSelect").value;
                 let showFavs = document.getElementById("favFilter").checked;
-                let favs = getFavorites();
                 let storeGroups = document.querySelectorAll(".store-container");
                 
                 storeGroups.forEach(group => {{
@@ -341,10 +397,8 @@ def generate_html(data):
                     cards.forEach(card => {{
                         let text = card.innerText.toLowerCase();
                         let ean = card.getAttribute('data-ean');
-                        
-                        // Check if it matches search, store, AND the favorite filter
                         let matchesSearch = text.includes(searchVal);
-                        let matchesFav = !showFavs || favs.includes(ean);
+                        let matchesFav = !showFavs || userFavorites.includes(ean);
                         
                         if (isStoreMatch && matchesSearch && matchesFav) {{
                             card.style.display = "flex";
@@ -359,56 +413,44 @@ def generate_html(data):
 
             function sortItems() {{
                 let sortVal = document.getElementById("sortSelect").value;
-                let storeGroups = document.querySelectorAll(".store-container");
-
-                storeGroups.forEach(group => {{
+                document.querySelectorAll(".store-container").forEach(group => {{
                     let grid = group.querySelector(".product-grid");
                     let cards = Array.from(grid.querySelectorAll(".product-card"));
 
                     if (sortVal !== "default") {{
                         cards.sort((a, b) => {{
-                            let priceA = parseFloat(a.querySelector(".new-price").innerText.replace(" kr.", ""));
-                            let priceB = parseFloat(b.querySelector(".new-price").innerText.replace(" kr.", ""));
-                            let discountA = parseFloat(a.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
-                            let discountB = parseFloat(b.querySelector(".discount-badge").innerText.replace("-", "").replace("%", ""));
+                            let priceA = parseFloat(a.querySelector(".new-price").innerText);
+                            let priceB = parseFloat(b.querySelector(".new-price").innerText);
+                            let discA = parseFloat(a.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
+                            let discB = parseFloat(b.querySelector(".discount-badge").innerText.replace(/[^0-9.]/g, ''));
                             let dateA = new Date(a.getAttribute("data-start"));
                             let dateB = new Date(b.getAttribute("data-start"));
 
                             if (sortVal === "price-asc") return priceA - priceB;
-                            if (sortVal === "price-desc") return priceB - priceA;
-                            if (sortVal === "discount-desc") return discountB - discountA; 
+                            if (sortVal === "discount-desc") return discB - discA; 
                             if (sortVal === "date-new") return dateB - dateA; 
-                            if (sortVal === "date-old") return dateA - dateB; 
                             return 0;
                         }});
                     }}
                     cards.forEach(card => grid.appendChild(card));
                 }});
-                
-                if(window.innerWidth <= 768) {{
-                    toggleSidebar();
-                }}
+                if(window.innerWidth <= 768) toggleSidebar();
             }}
 
-            function updateTraffic() {{
+            document.addEventListener('DOMContentLoaded', () => {{
                 let currentHour = new Date().getHours();
-                let badges = document.querySelectorAll(".traffic-badge");
-                
-                badges.forEach(badge => {{
+                document.querySelectorAll(".traffic-badge").forEach(badge => {{
                     let flowStr = badge.getAttribute("data-flow");
                     if (flowStr && flowStr !== "[]") {{
                         let flowData = JSON.parse(flowStr);
                         let flow = flowData[currentHour];
-                        
                         if (flow === 0) badge.innerHTML = "🌙 Closed";
                         else if (flow < 0.20) badge.innerHTML = "🟢 Quiet right now";
                         else if (flow < 0.40) badge.innerHTML = "🟡 Steady traffic";
                         else badge.innerHTML = "🔴 Busy right now";
-                    }} else {{
-                        badge.innerHTML = "⚪ No traffic data";
-                    }}
+                    }} else badge.innerHTML = "⚪ No traffic data";
                 }});
-            }}
+            }});
         </script>
     </body></html>
     """
