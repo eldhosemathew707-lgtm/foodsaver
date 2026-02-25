@@ -58,12 +58,12 @@ def generate_html(data):
 
             // TODO: PASTE YOUR FIREBASE CONFIG HERE:
             const firebaseConfig = {{
-                apiKey: "YOUR_API_KEY",
-                authDomain: "YOUR_PROJECT.firebaseapp.com",
-                projectId: "YOUR_PROJECT",
-                storageBucket: "YOUR_PROJECT.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:abcdef"
+                apiKey: "AIzaSyBB6C2ipV6hRF7F_CEWQtb2ENx94CLuGKM",
+                authDomain: "food-rescueapp.firebaseapp.com",
+                projectId: "food-rescueapp",
+                storageBucket: "food-rescueapp.firebasestorage.app",
+                messagingSenderId: "201559525774",
+                appId: "1:201559525774:web:420f9fc505ae453a04bcdf"
             }};
 
             const app = initializeApp(firebaseConfig);
@@ -581,3 +581,4 @@ if data:
     generate_html(data)
 else:
     print("Failed to generate HTML: No data was found.")
+
