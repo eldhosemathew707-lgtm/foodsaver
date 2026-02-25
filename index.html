@@ -18,8 +18,9 @@
 
         <!-- FIREBASE SDK INJECTION -->
         <script type="module">
+            // NEW: Added sendPasswordResetEmail to the imports
             import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-            import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+            import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
             import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
             // TODO: PASTE YOUR FIREBASE CONFIG HERE:
@@ -38,6 +39,7 @@
             window.signInWithEmailAndPassword = signInWithEmailAndPassword;
             window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
             window.signOut = signOut;
+            window.sendPasswordResetEmail = sendPasswordResetEmail; // Added to window
             window.doc = doc;
             window.setDoc = setDoc;
             window.getDoc = getDoc;
@@ -61,12 +63,17 @@
             .fav-filter-container { display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 12px 16px; border-radius: 25px; border: 1px solid #444; cursor: pointer; color: #fff; font-size: 0.95em; font-weight: 600; user-select: none; transition: 0.2s; }
             .fav-filter-container input { width: auto; margin: 0; cursor: pointer; accent-color: #e74c3c; }
 
-            /* --- NEW: CUSTOM LOGIN MODAL STYLES --- */
+            /* CUSTOM LOGIN MODAL STYLES */
             .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
             .modal-content { background: #1e1e1e; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); position: relative; }
             .modal-content h2 { margin-top: 0; color: #fff; font-size: 1.5em; margin-bottom: 20px; text-align: center; }
             .modal-content input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; box-sizing: border-box; font-family: 'Inter', sans-serif; }
             .modal-content input:focus { border-color: #3498db; outline: none; }
+            
+            /* NEW: Forgot password link styling */
+            .forgot-password { text-align: right; margin-top: -10px; margin-bottom: 15px; font-size: 0.85em; color: #3498db; cursor: pointer; transition: 0.2s; }
+            .forgot-password:hover { text-decoration: underline; color: #2980b9; }
+
             .modal-btn { background: #2ecc71; color: white; padding: 12px; border: none; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em; transition: 0.2s; }
             .modal-btn:hover { background: #27ae60; }
             .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2em; font-weight: bold; transition: 0.2s; }
@@ -128,13 +135,17 @@
     <body>
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-        <!-- NEW: CUSTOM HTML LOGIN MODAL -->
+        <!-- HTML LOGIN MODAL -->
         <div id="login-modal" class="modal-overlay">
             <div class="modal-content">
                 <span class="close-modal" onclick="closeLoginModal()">✕</span>
                 <h2>Login / Register</h2>
                 <input type="email" id="emailInput" placeholder="Email address" required>
                 <input type="password" id="passwordInput" placeholder="Password (min. 6 chars)" required>
+                
+                <!-- NEW: Forgot password button -->
+                <div class="forgot-password" onclick="handleForgotPassword()">Forgot password?</div>
+                
                 <button class="modal-btn" onclick="submitLogin()">Continue</button>
                 <p id="loginMessage" style="color: #e74c3c; font-size: 0.85em; margin-top: 15px; display: none;"></p>
             </div>
@@ -4358,7 +4369,7 @@
                 </div>
                 </div></div></div>
         </div> 
-        <div class="site-footer">🟢 Live data last updated: <span>25-02-2026 at 13:35</span></div>
+        <div class="site-footer">🟢 Live data last updated: <span>25-02-2026 at 13:51</span></div>
         
         <script>
             let userFavorites = [];
@@ -4389,9 +4400,9 @@
                 });
             });
 
-            // --- NEW UI MODAL LOGIC ---
+            // --- UI MODAL LOGIC ---
             function openLoginModal() {
-                document.getElementById('loginMessage').style.display = 'none'; // clear old errors
+                document.getElementById('loginMessage').style.display = 'none'; 
                 document.getElementById('emailInput').value = '';
                 document.getElementById('passwordInput').value = '';
                 document.getElementById('login-modal').style.display = 'flex';
@@ -4407,6 +4418,7 @@
                 let msgBox = document.getElementById("loginMessage");
                 
                 if (!email || !password) {
+                    msgBox.style.color = "#e74c3c";
                     msgBox.innerText = "Please fill in both fields.";
                     msgBox.style.display = "block";
                     return;
@@ -4431,10 +4443,34 @@
                             msgBox.innerText = "Registration error: " + err.message;
                         }
                     } else {
-                        msgBox.style.color = "#e74c3c"; // Red error
+                        msgBox.style.color = "#e74c3c"; 
                         msgBox.innerText = "Login Error: " + error.message;
                         msgBox.style.display = "block";
                     }
+                }
+            }
+
+            // --- NEW: FORGOT PASSWORD LOGIC ---
+            async function handleForgotPassword() {
+                let email = document.getElementById("emailInput").value.trim();
+                let msgBox = document.getElementById("loginMessage");
+
+                if (!email) {
+                    msgBox.style.color = "#e74c3c";
+                    msgBox.innerText = "Please enter your email address in the box first.";
+                    msgBox.style.display = "block";
+                    return;
+                }
+
+                try {
+                    await window.sendPasswordResetEmail(window.auth, email);
+                    msgBox.style.color = "#2ecc71"; // Green success text
+                    msgBox.innerText = "Reset email sent! Please check your inbox.";
+                    msgBox.style.display = "block";
+                } catch (error) {
+                    msgBox.style.color = "#e74c3c";
+                    msgBox.innerText = "Error: " + error.message;
+                    msgBox.style.display = "block";
                 }
             }
 
@@ -4447,7 +4483,7 @@
                 event.preventDefault(); 
                 
                 if (!window.auth || !window.auth.currentUser) {
-                    openLoginModal(); // Pop open the new UI modal if they aren't logged in!
+                    openLoginModal(); 
                     return;
                 }
                 
